@@ -1,0 +1,49 @@
+/* StandingsEditor.css */
+
+.standings-editor {
+    padding: 4rem 1rem; /* Adjust top padding to account for the navbar */
+    margin: 0 auto;
+    max-width: 800px; /* Center the content and limit the width */
+    background-color: #ffffff; /* Ensure it has a visible background */
+    border-radius: 8px; /* Optional: Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Subtle shadow */
+  }
+  
+  .standings-editor h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333; /* Dark gray for readability */
+    text-align: center;
+  }
+  
+  .standings-editor form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Space between form elements */
+  }
+  
+  .standings-editor input,
+  .standings-editor select,
+  .standings-editor textarea {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .standings-editor button {
+    background-color: #007bff; /* Primary blue */
+    color: #fff;
+    border: none;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .standings-editor button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+  }
+  

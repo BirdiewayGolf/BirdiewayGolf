@@ -1,0 +1,51 @@
+/* RegistrationsList.css */
+
+.registrations-list {
+    padding: 4rem 1rem; /* Add padding to prevent overlap with navbar */
+    margin: 0 auto;
+    max-width: 800px; /* Center the content and limit width */
+    background-color: #ffffff; /* White background */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  }
+  
+  .registrations-list h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333; /* Dark gray for readability */
+    text-align: center;
+  }
+  
+  .registrations-container {
+    padding: 1rem;
+    border: 1px solid #ccc; /* Light border around the list */
+    border-radius: 8px; /* Match the outer border style */
+    background-color: #f9f9f9; /* Light gray background for the list */
+  }
+  
+  .registrations-container ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0;
+    margin: 0;
+  }
+  
+  .registrations-container li {
+    padding: 0.75rem;
+    border-bottom: 1px solid #ddd; /* Separate each registration */
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  .registrations-container li:last-child {
+    border-bottom: none; /* Remove border from the last item */
+  }
+  
+  .registrations-container span {
+    font-weight: bold;
+    color: #333; /* Highlight names */
+  }
+  
+  .registrations-list {
+    padding-top: calc(var(--navbar-height, 4rem) + 1rem); /* Adjust for navbar height */
+  }
+  

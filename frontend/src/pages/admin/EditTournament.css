@@ -1,0 +1,220 @@
+/* EditTournament.css */
+
+.edit-tournament {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .edit-tournament .container {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+  }
+  
+  .edit-tournament h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1.5rem;
+  }
+  
+  .edit-tournament .section {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1.5rem;
+  }
+  
+  .edit-tournament .section:last-child {
+    border-bottom: none;
+  }
+  
+  .edit-tournament h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+  }
+  
+  .edit-tournament label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Add asterisk for required fields */
+  label:has(+ [required])::after {
+    content: " *";
+    color: #ef4444;
+  }
+  
+  .edit-tournament input[type="text"],
+  .edit-tournament input[type="email"],
+  .edit-tournament input[type="tel"],
+  .edit-tournament input[type="number"],
+  .edit-tournament input[type="date"],
+  .edit-tournament input[type="time"],
+  .edit-tournament select,
+  .edit-tournament textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    margin-top: 0.25rem;
+    color: #111827;
+  }
+  
+  .edit-tournament textarea {
+    resize: none;
+  }
+  
+  .edit-tournament input:focus,
+  .edit-tournament select:focus,
+  .edit-tournament textarea:focus {
+    outline: none;
+    border-color: #156E3D;
+    box-shadow: 0 0 0 3px rgba(21, 110, 61, 0.1);
+  }
+  
+  /* Error state for inputs */
+  .edit-tournament input:invalid,
+  .edit-tournament select:invalid,
+  .edit-tournament textarea:invalid {
+    border-color: #ef4444;
+  }
+  
+  /* Loading state */
+  .edit-tournament .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #4b5563;
+  }
+  
+  /* Error state */
+  .edit-tournament .error {
+    background-color: #fef2f2;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    color: #991b1b;
+    margin-bottom: 1rem;
+  }
+  
+  /* Form actions */
+  .edit-tournament .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .edit-tournament .actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .edit-tournament .actions .cancel {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+  
+  .edit-tournament .actions .cancel:hover {
+    background-color: #f9fafb;
+  }
+  
+  .edit-tournament .actions .save {
+    background-color: #156E3D;
+    color: white;
+    border: 1px solid transparent;
+  }
+  
+  .edit-tournament .actions .save:hover {
+    background-color: #0F522E;
+  }
+  
+  .edit-tournament .actions .save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Grid layouts */
+  .edit-tournament .grid {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .edit-tournament .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Loading spinner */
+  .edit-tournament .loading::after {
+    content: "";
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #156E3D;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 0.5rem;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Success message */
+  .edit-tournament .success {
+    background-color: #f1f9f5;
+    color: #156E3D;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Helper text */
+  .edit-tournament .helper-text {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  /* Required field note */
+  .edit-tournament .required-field-note {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .edit-tournament .container {
+      padding: 1rem;
+    }
+    
+    .edit-tournament .grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .edit-tournament .actions {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .edit-tournament .actions button {
+      width: 100%;
+    }
+  }
