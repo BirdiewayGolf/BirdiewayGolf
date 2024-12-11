@@ -1,5 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
-import App from './App';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 // Public Pages
 import Home from './pages/public/Home';
@@ -11,6 +10,7 @@ import Sponsor from './pages/public/Sponsor';
 // Public Components
 import TournamentList from './components/public/TournamentList';
 import TournamentDetails from './components/public/TournamentDetails';
+import Standings from './components/public/Standings';
 
 // Registration Components
 import BusinessRegistrationForm from './components/public/registration/BusinessRegistrationForm';
@@ -30,129 +30,105 @@ import TournamentStandingsList from './components/admin/TournamentStandingsList'
 // Auth Components
 import PrivateRoute from './components/auth/PrivateRoute';
 
-const router = createBrowserRouter(
-  [
-    {
-      path: '/',
-      element: <App />,
-      children: [
-        // Public Routes
-        {
-          path: '/',
-          element: <Home />,
-        },
-        {
-          path: 'about',
-          element: <About />,
-        },
-        {
-          path: 'contact',
-          element: <Contact />,
-        },
-        {
-          path: 'fundraising',
-          element: <Fundraising />,
-        },
-        {
-          path: 'sponsor',
-          element: <Sponsor />,
-        },
+// Root Layout
+const RootLayout = () => {
+  return <Outlet />;
+};
 
-        // Tournament Routes
-        {
-          path: 'tournaments',
-          element: <TournamentList />,
-        },
-        {
-          path: 'tournaments/league/:league',
-          element: <TournamentList />,
-        },
-        {
-          path: 'tournaments/details/:id',
-          element: <TournamentDetails />,
-        },
-
-        // Registration Routes
-        {
-          path: 'register/business/:id',
-          element: <BusinessRegistrationForm />,
-        },
-        {
-          path: 'register/junior/:id',
-          element: <JuniorRegistrationForm />,
-        },
-        {
-          path: 'register/longday/:id',
-          element: <LongDayRegistrationForm />,
-        },
-        {
-          path: 'register/fundraiser/:id',
-          element: <FundraiserRegistrationForm />,
-        },
-
-        // Admin Routes
-        {
-          path: 'admin/login',
-          element: <LoginPage />,
-        },
-        {
-          path: 'admin',
-          element: (
-            <PrivateRoute>
-              <AdminDashboard />
-            </PrivateRoute>
-          ),
-        },
-        {
-          path: 'admin/tournaments',
-          element: (
-            <PrivateRoute>
-              <AdminTournamentList />
-            </PrivateRoute>
-          ),
-        },
-        {
-          path: 'admin/tournaments/:id/edit',
-          element: (
-            <PrivateRoute>
-              <EditTournament />
-            </PrivateRoute>
-          ),
-        },
-        {
-          path: 'admin/registrations',
-          element: (
-            <PrivateRoute>
-              <RegistrationsList />
-            </PrivateRoute>
-          ),
-        },
-        // Updated Standings Routes
-        {
-          path: 'admin/standings',
-          element: (
-            <PrivateRoute>
-              <TournamentStandingsList />
-            </PrivateRoute>
-          ),
-        },
-        {
-          path: 'admin/standings/:tournamentId',
-          element: (
-            <PrivateRoute>
-              <StandingsEditor />
-            </PrivateRoute>
-          ),
-        },
-      ],
-    },
-  ],
+const router = createBrowserRouter([
   {
-    future: {
-      v7_startTransition: true,
-      v7_relativeSplatPath: true,
-    },
-  }
-);
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      // Public Routes
+      {
+        path: '/',
+        element: <Home />,
+      },
+      {
+        path: '/about',
+        element: <About />,
+      },
+      {
+        path: '/contact',
+        element: <Contact />,
+      },
+      {
+        path: '/fundraising',
+        element: <Fundraising />,
+      },
+      {
+        path: '/sponsor',
+        element: <Sponsor />,
+      },
+
+      // Tournament Routes
+      {
+        path: '/tournaments',
+        element: <TournamentList />,
+      },
+      {
+        path: '/tournaments/league/:league',
+        element: <TournamentList />,
+      },
+      {
+        path: '/tournaments/details/:id',
+        element: <TournamentDetails />,
+      },
+      {
+        path: '/standings/:league',
+        element: <Standings />,
+      },
+
+      // Registration Routes
+      {
+        path: '/register/business/:id',
+        element: <BusinessRegistrationForm />,
+      },
+      {
+        path: '/register/junior/:id',
+        element: <JuniorRegistrationForm />,
+      },
+      {
+        path: '/register/longday/:id',
+        element: <LongDayRegistrationForm />,
+      },
+      {
+        path: '/register/fundraiser/:id',
+        element: <FundraiserRegistrationForm />,
+      },
+
+      // Admin Routes
+      {
+        path: '/admin/login',
+        element: <LoginPage />,
+      },
+      {
+        path: '/admin',
+        element: <PrivateRoute><AdminDashboard /></PrivateRoute>,
+      },
+      {
+        path: '/admin/tournaments',
+        element: <PrivateRoute><AdminTournamentList /></PrivateRoute>,
+      },
+      {
+        path: '/admin/tournaments/:id/edit',
+        element: <PrivateRoute><EditTournament /></PrivateRoute>,
+      },
+      {
+        path: '/admin/registrations',
+        element: <PrivateRoute><RegistrationsList /></PrivateRoute>,
+      },
+      {
+        path: '/admin/standings',
+        element: <PrivateRoute><TournamentStandingsList /></PrivateRoute>,
+      },
+      {
+        path: '/admin/standings/:tournamentId',
+        element: <PrivateRoute><StandingsEditor /></PrivateRoute>,
+      },
+    ],
+  },
+]);
 
 export default router;
