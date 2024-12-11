@@ -1,155 +1,196 @@
-import React from 'react';
-import { Mail, Phone, Instagram, MapPin } from 'lucide-react';
-import { sendContactMessage } from '../../services/api';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import { apiService } from '../../services/api';
 
 const Contact = () => {
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const location = useLocation();
+  const tournamentInfo = location.state?.tournamentInfo;
 
-    const formData = Object.fromEntries(new FormData(e.target));
-    console.log('Form Data:', formData); // Debugging form data
+  const ContactForm = () => {
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      phone: '',
+      message: tournamentInfo ? `I'm interested in registering for the tournament: ${tournamentInfo.name}` : '',
+      subject: tournamentInfo ? 'Tournament Registration Interest' : '',
+      tournamentId: tournamentInfo?.id || '',
+      tournamentName: tournamentInfo?.name || ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    try {
-      await sendContactMessage(formData); // Sends the data to the backend
-      e.target.reset(); // Clears the form after successful submission
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-    }
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+
+      try {
+        const response = await apiService.contact.submit(formData);
+        
+        if (response.data.success) {
+          toast.success('Thank you for your message! We will contact you soon.');
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            message: '',
+            subject: '',
+            tournamentId: '',
+            tournamentName: ''
+          });
+        }
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        toast.error(error.response?.data?.message || 'Failed to send message. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {tournamentInfo && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 mb-6">
+            <p className="text-emerald-800">
+              Inquiring about: <span className="font-medium">{tournamentInfo.name}</span>
+            </p>
+          </div>
+        )}
+        
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+            Subject
+          </label>
+          <input
+            type="text"
+            id="subject"
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+            Message
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            rows="4"
+            value={formData.message}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`w-full bg-emerald-600 text-white py-2 px-4 rounded-md transition-colors duration-200 ${
+            isSubmitting ? 'opacity-75 cursor-not-allowed' : 'hover:bg-emerald-700'
+          }`}
+        >
+          {isSubmitting ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Sending...
+            </span>
+          ) : (
+            'Send Message'
+          )}
+        </button>
+      </form>
+    );
   };
 
   return (
-    <div className="pt-20">
-      {/* Hero Section */}
-      <section className="bg-emerald-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-serif mb-6">Contact Us</h1>
-            <p className="text-xl text-emerald-50">
-              Have questions about our tournaments? Get in touch with our team and we'll be happy to help.
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      {/* Contact Section */}
+      <div className="flex-grow py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 sm:p-8">
+            {/* Title */}
+            <h1 className="text-3xl font-bold text-center text-emerald-600 mb-4">
+              Contact Us
+            </h1>
+            {/* Paragraph */}
+            <p className="text-gray-700 text-center text-sm sm:text-base mb-6">
+            Interested in joining our golf league or need help organizing a fundraiser golf event? We’re here to assist! Whether you’re looking to host a tournament, collaborate on a charity event, or have general inquiries, our team is ready to make your experience smooth, enjoyable, and successful.
             </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-2xl font-serif mb-8">Get In Touch</h2>
-              <div className="space-y-6">
-                <div className="flex items-center">
-                  <Mail className="w-6 h-6 text-emerald-600 mr-4" />
-                  <div>
-                    <h3 className="font-medium">Email</h3>
-                    <a href="mailto:birdieway@gmail.com" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                      birdieway@gmail.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Phone className="w-6 h-6 text-emerald-600 mr-4" />
-                  <div>
-                    <h3 className="font-medium">Phone</h3>
-                    <a href="tel:8011111111" className="text-gray-600 hover:text-emerald-600 transition-colors">
-                      (801) 111-1111
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Instagram className="w-6 h-6 text-emerald-600 mr-4" />
-                  <div>
-                    <h3 className="font-medium">Social Media</h3>
-                    <a
-                      href="https://instagram.com/birdieway"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-emerald-600 transition-colors"
-                    >
-                      @birdieway
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <MapPin className="w-6 h-6 text-emerald-600 mr-4" />
-                  <div>
-                    <h3 className="font-medium">Location</h3>
-                    <p className="text-gray-600">Salt Lake City, Utah</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Contact Form */}
             <div>
-              <h2 className="text-2xl font-serif mb-8">Send Us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows="5"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  Send Message
-                </button>
-              </form>
+              <ContactForm />
             </div>
           </div>
         </div>
-      </section>
+      </div>
+      <Footer />
     </div>
   );
 };

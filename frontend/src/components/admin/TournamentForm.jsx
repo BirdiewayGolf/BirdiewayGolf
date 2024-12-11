@@ -1,57 +1,77 @@
-// src/components/admin/TournamentForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Trophy, Clock, ClipboardList } from "lucide-react";
 import { toast } from 'react-toastify';
-import { useTournament } from '../../hooks/useTournament';
-import './TournamentForm.css';
 
-const TournamentForm = () => {
+// Helper function for safe date formatting
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('Date formatting error:', error);
+    return '';
+  }
+};
+
+const TournamentForm = ({ initialData, onSubmit, isEditing }) => {
   const navigate = useNavigate();
-  const { createTournament, loading, error: hookError } = useTournament();
-  const [error, setError] = useState('');
-  
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    league: '',  // Changed from type to league
+    league: 'business',
     date: '',
-    startTime: '',
-    location: '', 
-    format: '',
+    location: '',
+    price: '',
     description: '',
-    entryFee: '',
-    maxPlayers: '',
-    registrationDeadline: '',
-    // Optional fields
-    prizeDistribution: '',
-    rules: '',
-    handicapRequirements: '',
-    courseName: '',
-    courseAddress: '',
-    contactEmail: '',
-    contactPhone: '',
-    includedInEntry: '',
-    cancellationPolicy: '',
-    weatherPolicy: '',
-    scoringMethod: '',
-    schedule: '',
-    equipmentRules: '',
-    dresscode: '',
-    foodAndBeverage: '',
-    practiceRounds: '',
-    specialNotes: '',
-    sponsorshipDetails: '',
-    status: 'upcoming'
+    schedule: {
+      startTime: '',
+      checkInTime: '',
+      format: ''
+    },
+    sponsorInfo: {
+      name: '',
+      website: ''
+    },
+    additionalDetails: {
+      food: {
+        included: false,
+        details: ''
+      },
+      cancelationPolicy: ''
+    }
   });
 
-  // Check auth on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/admin/login');
-      toast.error('Please login to create a tournament');
+    if (initialData) {
+      try {
+        setFormData({
+          ...initialData,
+          date: formatDateForInput(initialData.date),
+          schedule: {
+            startTime: initialData.schedule?.startTime || '',
+            checkInTime: initialData.schedule?.checkInTime || '',
+            format: initialData.schedule?.format || ''
+          },
+          sponsorInfo: {
+            name: initialData.sponsorInfo?.name || '',
+            website: initialData.sponsorInfo?.website || ''
+          },
+          additionalDetails: {
+            food: {
+              included: initialData.additionalDetails?.food?.included || false,
+              details: initialData.additionalDetails?.food?.details || ''
+            },
+            cancelationPolicy: initialData.additionalDetails?.cancelationPolicy || ''
+          }
+        });
+      } catch (error) {
+        console.error('Error setting form data:', error);
+        toast.error('Error loading tournament data');
+      }
     }
-  }, [navigate]);
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,459 +81,244 @@ const TournamentForm = () => {
     }));
   };
 
+  const handleNestedChange = (section, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: { ...prev[section], [field]: value }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
+    
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/admin/login');
-        toast.error('Please login to create a tournament');
-        return;
-      }
-
-      // Convert numeric fields and dates
-      const processedData = {
+      const formattedData = {
         ...formData,
-        entryFee: parseFloat(formData.entryFee),
-        maxPlayers: parseInt(formData.maxPlayers),
-        date: new Date(formData.date),
-        registrationDeadline: new Date(formData.registrationDeadline)
+        date: formData.date ? new Date(formData.date).toISOString() : undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined
       };
 
-      console.log('Submitting data:', processedData);
-
-      await createTournament(processedData);
-      toast.success('Tournament created successfully!');
-      navigate('/admin/tournaments');
-    } catch (err) {
-      console.error('Detailed error response:', err.response?.data);
-      const errorMessage = err.response?.data?.errors 
-        ? Object.entries(err.response.data.errors).map(([key, value]) => `${key}: ${value}`).join(', ')
-        : err.response?.data?.message || 'Error creating tournament';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setLoading(true);
+      await onSubmit(formattedData);
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast.error(error.response?.data?.message || 'Error saving tournament');
+    } finally {
+      setLoading(false);
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-semibold mb-6">Create New Tournament</h2>
+    <form onSubmit={handleSubmit} className="space-y-8 bg-white rounded-lg shadow-md p-6">
+      {/* Basic Information */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tournament Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
 
-          {(error || hookError) && (
-            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">
-              {typeof (error || hookError) === 'object' 
-                ? JSON.stringify(error || hookError) 
-                : (error || hookError)}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">League</label>
+            <select
+              name="league"
+              value={formData.league}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="business">Business League</option>
+              <option value="junior">Junior League</option>
+              <option value="fundraiser">Fundraiser</option>
+              <option value="longday">Long Day Tournament</option>
+            </select>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tournament Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tournament Date</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    League
-                  </label>
-                  <select
-                    name="league"
-                    value={formData.league}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  >
-                    <option value="">Select League</option>
-                    <option value="business">Business League</option>
-                    <option value="amateur">Amateur League</option>
-                    <option value="junior">Junior League</option>
-                  </select>
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Location</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tournament Date
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Entry Fee ($)</label>
+            <input
+              type="number"
+              name="price"
+              min="0"
+              step="0.01"
+              value={formData.price}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Location Details */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Location Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    required
-                    placeholder="Tournament Location"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course Name
-                  </label>
-                  <input
-                    type="text"
-                    name="courseName"
-                    value={formData.courseName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Course Address
-                  </label>
-                  <input
-                    type="text"
-                    name="courseAddress"
-                    value={formData.courseAddress}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-{/* Tournament Format & Rules */}
-<div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Format & Rules</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Format
-                  </label>
-                  <select
-                    name="format"
-                    value={formData.format}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  >
-                    <option value="">Select Format</option>
-                    <option value="Stroke Play">Stroke Play</option>
-                    <option value="Scramble">Scramble</option>
-                    <option value="Best Ball">Best Ball</option>
-                    <option value="Match Play">Match Play</option>
-                    <option value="Modified Stableford">Modified Stableford</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Scoring Method
-                  </label>
-                  <input
-                    type="text"
-                    name="scoringMethod"
-                    value={formData.scoringMethod}
-                    onChange={handleChange}
-                    placeholder="e.g., Gross Score, Net Score, Points"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Handicap Requirements
-                  </label>
-                  <input
-                    type="text"
-                    name="handicapRequirements"
-                    value={formData.handicapRequirements}
-                    onChange={handleChange}
-                    placeholder="e.g., Maximum handicap 24"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Equipment Rules
-                  </label>
-                  <input
-                    type="text"
-                    name="equipmentRules"
-                    value={formData.equipmentRules}
-                    onChange={handleChange}
-                    placeholder="Any specific equipment requirements"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Registration & Fees */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Registration & Fees</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Entry Fee ($)
-                  </label>
-                  <input
-                    type="number"
-                    name="entryFee"
-                    value={formData.entryFee}
-                    onChange={handleChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Maximum Players
-                  </label>
-                  <input
-                    type="number"
-                    name="maxPlayers"
-                    value={formData.maxPlayers}
-                    onChange={handleChange}
-                    required
-                    min="1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Registration Deadline
-                  </label>
-                  <input
-                    type="date"
-                    name="registrationDeadline"
-                    value={formData.registrationDeadline}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Included in Entry Fee
-                  </label>
-                  <input
-                    type="text"
-                    name="includedInEntry"
-                    value={formData.includedInEntry}
-                    onChange={handleChange}
-                    placeholder="e.g., Cart, Range Balls, Lunch"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-{/* Prize Information */}
-<div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Prize Information</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prize Distribution
-                </label>
-                <textarea
-                  name="prizeDistribution"
-                  value={formData.prizeDistribution}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Detail the prizes and their distribution"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Additional Information */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Additional Information</h3>
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tournament Schedule
-                  </label>
-                  <textarea
-                    name="schedule"
-                    value={formData.schedule}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Detailed schedule of tournament day"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                    rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rules & Regulations
-                  </label>
-                  <textarea
-                    name="rules"
-                    value={formData.rules}
-                    onChange={handleChange}
-                    rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Policies */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Policies</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cancellation Policy
-                  </label>
-                  <textarea
-                    name="cancellationPolicy"
-                    value={formData.cancellationPolicy}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Detail the cancellation and refund policy"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Weather Policy
-                  </label>
-                  <textarea
-                    name="weatherPolicy"
-                    value={formData.weatherPolicy}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Weather conditions and rescheduling policy"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-
-{/* Contact Information */}
-<div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-medium mb-4">Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact Email
-                  </label>
-                  <input
-                    type="email"
-                    name="contactEmail"
-                    value={formData.contactEmail}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact Phone
-                  </label>
-                  <input
-                    type="tel"
-                    name="contactPhone"
-                    value={formData.contactPhone}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6">
-              <button
-                type="button"
-                onClick={() => navigate('/admin/tournaments')}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {loading ? 'Creating...' : 'Create Tournament'}
-              </button>
-            </div>
-          </form>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <textarea
+            name="description"
+            rows="4"
+            value={formData.description}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
       </div>
-    </div>
+
+      {/* Schedule Information */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold border-b pb-2">Schedule</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Start Time</label>
+            <input
+              type="time"
+              value={formData.schedule.startTime}
+              onChange={(e) => handleNestedChange('schedule', 'startTime', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Check-in Time</label>
+            <input
+              type="time"
+              value={formData.schedule.checkInTime}
+              onChange={(e) => handleNestedChange('schedule', 'checkInTime', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Tournament Format</label>
+            <input
+              type="text"
+              value={formData.schedule.format}
+              onChange={(e) => handleNestedChange('schedule', 'format', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+              placeholder="e.g., Scramble, Best Ball, etc."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sponsor Information */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold border-b pb-2">Sponsor Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Sponsor Name</label>
+            <input
+              type="text"
+              value={formData.sponsorInfo.name}
+              onChange={(e) => handleNestedChange('sponsorInfo', 'name', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Sponsor Website</label>
+            <input
+              type="url"
+              value={formData.sponsorInfo.website}
+              onChange={(e) => handleNestedChange('sponsorInfo', 'website', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Details */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold border-b pb-2">Additional Details</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Cancellation Policy</label>
+            <textarea
+              value={formData.additionalDetails.cancelationPolicy}
+              onChange={(e) => handleNestedChange('additionalDetails', 'cancelationPolicy', e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+              rows="3"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="foodIncluded"
+                checked={formData.additionalDetails.food.included}
+                onChange={(e) => handleNestedChange('additionalDetails', 'food', {
+                  ...formData.additionalDetails.food,
+                  included: e.target.checked
+                })}
+                className="rounded text-emerald-600 focus:ring-emerald-500"
+              />
+              <label htmlFor="foodIncluded" className="text-sm font-medium text-gray-700">
+                Food/Beverages Included
+              </label>
+            </div>
+            {formData.additionalDetails.food.included && (
+              <textarea
+                value={formData.additionalDetails.food.details}
+                onChange={(e) => handleNestedChange('additionalDetails', 'food', {
+                  ...formData.additionalDetails.food,
+                  details: e.target.value
+                })}
+                placeholder="Describe food and beverages provided..."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500"
+                rows="2"
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Form Actions */}
+      <div className="flex justify-end space-x-4 pt-6 border-t">
+        <button
+          type="button"
+          onClick={() => navigate('/admin/tournaments')}
+          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {loading ? (
+            <span>Saving...</span>
+          ) : (
+            <span>{isEditing ? 'Update Tournament' : 'Create Tournament'}</span>
+          )}
+        </button>
+      </div>
+    </form>
   );
 };
 

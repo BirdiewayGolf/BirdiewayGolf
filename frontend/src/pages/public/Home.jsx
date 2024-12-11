@@ -1,100 +1,97 @@
-// src/pages/public/Home.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../../components/layout/Navbar';
 import HeroSlider from '../../components/layout/HeroSlider';
-import { Trophy, Users, Star } from 'lucide-react';
-import './Home.css';
+import Footer from '../../components/layout/Footer';
 
 const Home = () => {
-  const leagueInfo = [
+  const tournamentCategories = [
     {
-      title: "Business League",
-      description: "Build professional connections while competing in dynamic golf tournaments. Ideal for corporate teams and building business relationships.",
-      icon: <Trophy className="w-12 h-12 text-emerald-600" />,
-      path: "/tournaments/business"
+      title: 'Business League',
+      image: '/src/assets/b.jpeg',
+      description: 'Network and compete with other professionals',
+      link: '/tournaments/business',
     },
     {
-      title: "Birdieway Series",
-      description: "Compete in our exciting Long Day Challenge or showcase your skills in the Collegiate Tournament, open to past, present, and future college golfers.",
-      icon: <Users className="w-12 h-12 text-emerald-600" />,
-      path: "/tournaments/amateur"
+      title: 'Junior League',
+      image: '/src/assets/jun.jpg',
+      description: 'Develop skills and make friends',
+      link: '/tournaments/junior',
     },
     {
-      title: "Junior League",
-      description: "Develop skills and gain tournament experience in a supportive environment. Designed for young golfers aged 7-18.",
-      icon: <Star className="w-12 h-12 text-emerald-600" />,
-      path: "/tournaments/junior"
-    }
+      title: 'Long Day Tournament',
+      image: '/src/assets/long.jpg',
+      description: 'Challenge yourself with extended play',
+      link: '/tournaments/longday',
+    },
+    {
+      title: 'Fundraiser Golf Tournaments',
+      image: '/src/assets/fund.jpeg',
+      description: 'Let us make your fundraisers easier',
+      link: '/tournaments/fundraisers',
+    },
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Slider */}
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
       <HeroSlider />
 
-      {/* About/How It Works Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif text-gray-900 mb-4">
-              How BirdieWay Works
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join our professional tournament platform designed for golfers of all levels.
-              Experience organized competitions, track your progress, and be part of a
-              growing golf community.
-            </p>
-          </div>
-
-          {/* League Information Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {leagueInfo.map((league, index) => (
-              <div 
-                key={index}
-                className="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow duration-300"
-              >
-                <div className="mb-6">{league.icon}</div>
-                <h3 className="text-2xl font-serif text-gray-900 mb-4">
-                  {league.title}
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {league.description}
-                </p>
-                <Link 
-                  to={league.path}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center"
-                >
-                  Learn More 
-                  <svg 
-                    className="w-4 h-4 ml-2" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M9 5l7 7-7 7" 
-                    />
-                  </svg>
-                </Link>
-              </div>
-            ))}
-          </div>
-
-          {/* Learn More Button */}
-          <div className="text-center">
-            <Link 
+      {/* About Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">Welcome to Birdieway Golf</h2>
+            <div className="prose prose-lg mx-auto mb-8">
+              <p className="text-gray-600">
+                At Birdieway Golf, we're passionate about bringing the golf community together
+                through premier tournaments and leagues. Whether you're a business professional
+                looking to network, a junior golfer developing your skills, or someone who loves
+                the challenge of a full day of golf, we have something for everyone.
+              </p>
+            </div>
+            <Link
               to="/about"
-              className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-lg
-                hover:bg-emerald-700 transition-colors duration-300 shadow-md hover:shadow-lg"
+              className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              Learn More About BirdieWay
+              Learn More About Us
             </Link>
           </div>
         </div>
       </section>
+
+      {/* Tournament Categories */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Our Tournaments</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {tournamentCategories.map((category, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-2 hover:shadow-lg transition-all"
+              >
+                <img
+                  src={category.image}
+                  alt={category.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold mb-2">{category.title}</h3>
+                  <p className="text-gray-600 mb-4">{category.description}</p>
+                  <Link
+                    to={category.link}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    View Tournaments →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };

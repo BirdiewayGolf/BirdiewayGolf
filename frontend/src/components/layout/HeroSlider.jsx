@@ -1,132 +1,123 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import './HeroSlider.css';
 
-import businessImg from '../../assets/Business.jpg';
-import amateurImg from '../../assets/am.jpeg';
-import juniorImg from '../../assets/jun.jpg';
-import aboutImg from '../../assets/about.jpg';
+
+const slides = [
+  {
+    image: '/src/assets/Business.jpg',
+    title: 'Business League',
+    description: 'Join our premier Business League golf tournaments',
+    link: '/tournaments/business',
+  },
+  {
+    image: '/src/assets/jun.jpg',
+    title: 'Junior League',
+    description: 'Developing the next generation of golfers',
+    link: '/tournaments/junior',
+  },
+  {
+    image: '/src/assets/am.jpeg',
+    title: 'Long Day Tournament',
+    description: 'Test your endurance in our long day tournament',
+    link: '/tournaments/longday',
+  },
+  {
+    image:'/src/assets/About.jpg',
+    title: 'Host a Fundraiser',
+    description: 'Let us run your fundraising events.',
+    link: '/pages/public/Fundraising',
+  },
+];
 
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const slides = [
-    {
-      image: businessImg,
-      title: 'Business League',
-      description: 'Golf for businesses to network, compete, and enjoy a fun yet competitive atmosphere',
-      buttonText: 'Business Tournaments',
-      path: '/tournaments/business',
-    },
-    {
-      image: amateurImg,
-      title: 'Bridieway Series',
-      description:
-        'Our Long Day Challenge and Collegiate Tournament highlight the exceptional skill and competitive spirit of golfers in a high-stakes setting.',
-      buttonText: 'Tournaments',
-      path: '/tournaments/amateur',
-    },
-    {
-      image: juniorImg,
-      title: 'Junior League',
-      description: 'Develop skills and compete with young golfers',
-      buttonText: 'Junior Tournaments',
-      path: '/tournaments/junior',
-    },
-    {
-      image: aboutImg,
-      title: 'About BirdieWay',
-      description: 'Learn about our professional tournament platform',
-      buttonText: 'Learn More',
-      path: '/about',
-    },
-  ];
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Automatically change slides every 4 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 4000);
-    return () => clearInterval(interval); // Clean up the interval on component unmount
-  }, [slides.length]);
+    let interval;
+    if (isAutoPlaying) {
+      interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [isAutoPlaying]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setIsAutoPlaying(false);
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setIsAutoPlaying(false);
   };
 
   return (
-    <div className="relative h-[calc(100vh-5rem)] overflow-hidden">
+    <div className="relative h-[600px] overflow-hidden bg-gray-900">
       {/* Slides */}
       <div className="relative h-full">
         {slides.map((slide, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            className={`absolute inset-0 transition-opacity duration-1000 transform ${
+              index === currentSlide
+                ? 'opacity-100 scale-100 translate-x-0'
+                : 'opacity-0 scale-95 translate-x-full'
             }`}
           >
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${slide.image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-40" />
-
-            <div className="relative z-20 h-full flex items-center px-6 md:px-20">
-              <div className="max-w-xl">
-                <h1 className="text-4xl md:text-6xl font-serif text-white mb-4 opacity-0 animate-slideUp">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent flex items-center">
+              <div className="pl-10 md:pl-20 max-w-lg space-y-6">
+                <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg tracking-wide animate-slide-in">
                   {slide.title}
-                </h1>
-                <p className="text-lg md:text-xl text-gray-200 mb-8 opacity-0 animate-slideUp animation-delay-200">
+                </h2>
+                <p className="text-base md:text-lg text-white drop-shadow-md animate-fade-in">
                   {slide.description}
                 </p>
-                <Link
-                  to={slide.path}
-                  className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-lg 
-                   hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105
-                   opacity-0 animate-slideUp animation-delay-400"
+                <a
+                  href={slide.link}
+                  className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-emerald-700 transition-all transform hover:scale-105 animate-slide-up"
                 >
-                  {slide.buttonText}
-                </Link>
+                  Learn More
+                </a>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Buttons */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full
-         bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all duration-300
-         text-white hover:scale-110"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-colors"
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft className="h-6 w-6" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full
-         bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all duration-300
-         text-white hover:scale-110"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-colors"
       >
-        <ChevronRight size={24} />
+        <ChevronRight className="h-6 w-6" />
       </button>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex space-x-3">
+      <div className="absolute bottom-6 left-6 flex space-x-3">
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'
+            onClick={() => {
+              setCurrentSlide(index);
+              setIsAutoPlaying(false);
+            }}
+            className={`w-4 h-4 rounded-full border-2 transition-colors ${
+              index === currentSlide
+                ? 'bg-emerald-500 border-emerald-500'
+                : 'bg-gray-200 border-gray-400'
             }`}
           />
         ))}

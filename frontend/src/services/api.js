@@ -1,26 +1,33 @@
-// src/services/api.js
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5004/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5004';
 
-const axiosInstance = axios.create({
+const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000 // 10 second timeout
+  timeout: 10000,
+  withCredentials: true
 });
 
 // Request interceptor
-axiosInstance.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Log outgoing requests for debugging
-    console.log('Making request to:', config.url, config.data);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Request:', {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        headers: config.headers
+      });
+    }
     return config;
   },
   (error) => {
@@ -30,130 +37,99 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response interceptor
-axiosInstance.interceptors.response.use(
+api.interceptors.response.use(
   (response) => {
-    // Log successful responses
-    console.log('Received response:', response.data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Response:', {
+        url: response.config.url,
+        status: response.status,
+        data: response.data
+      });
+    }
     return response;
   },
   (error) => {
     if (!error.response) {
-      // Network error
-      toast.error('Network error - Please check if the server is running');
-      console.error('Network error:', error);
+      toast.error('Network error. Please check your connection.');
       return Promise.reject(error);
     }
 
     if (error.response.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/admin/login';
-      toast.error('Session expired. Please log in again.');
-    } else {
-      const errorMessage = error.response.data?.message ||
-        error.response.data?.error ||
-        'An error occurred';
-
-      // If there are validation errors, show them in detail
-      if (error.response.data?.errors) {
-        const validationErrors = Object.entries(error.response.data.errors)
-          .map(([field, message]) => `${field}: ${message}`)
-          .join(', ');
-        toast.error(`Validation errors: ${validationErrors}`);
-      } else {
-        toast.error(errorMessage);
+      localStorage.removeItem('user');
+      
+      if (!window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+        toast.error('Session expired. Please log in again.');
       }
-
-      console.error('Response error:', {
-        status: error.response.status,
-        data: error.response.data,
-        url: error.config?.url
-      });
     }
+
+    const errorMessage = error.response.data?.message || 
+      error.response.data?.error || 
+      'An error occurred';
+
+    if (error.response.status !== 401) {
+      toast.error(errorMessage);
+    }
+
     return Promise.reject(error);
   }
 );
 
-// Contact Form Service
-export const sendContactMessage = async (formData) => {
-  try {
-    console.log('Sending contact message:', formData);
-    const response = await axiosInstance.post('/contact', formData);
-    toast.success('Message sent successfully!');
-    return response.data;
-  } catch (error) {
-    const message = error.response?.data?.error || 'Failed to send message.';
-    toast.error(message);
-    console.error('Error in sendContactMessage:', error.response || error.message);
-    throw error;
+export const apiService = {
+  // Auth endpoints
+  auth: {
+    login: (credentials) => api.post('/api/auth/login', credentials),
+    verifyToken: () => api.get('/api/auth/verify'),
+    logout: () => api.post('/api/auth/logout')
+  },
+
+  // Tournament endpoints
+  tournaments: {
+    getAll: () => api.get('/api/admin/tournaments'),
+    getOne: (id) => api.get(`/api/admin/tournaments/${id}`),
+    create: (data) => api.post('/api/admin/tournaments', data),
+    update: (id, data) => api.put(`/api/admin/tournaments/${id}`, data),
+    delete: (id) => api.delete(`/api/admin/tournaments/${id}`),
+    getPublic: (league) => api.get(`/api/public/tournaments/${league}`),
+    getDetails: (id) => api.get(`/api/public/tournaments/details/${id}`)
+  },
+
+  // Standings endpoints
+  standings: {
+    getLeagueStandings: (league, season) => api.get(`/api/standings/league/${league}/${season}`),
+    getAdminStandings: (league, season) => api.get(`/api/standings/admin/standings/${league}/${season}`),
+    updateStandings: (league, season, data) => api.put(`/api/standings/admin/standings/${league}/${season}`, data)
+  },
+
+  // Registration endpoints
+  registrations: {
+    create: (data) => api.post('/api/registrations', data),
+    submitBusinessRegistration: (tournamentId, formData) => api.post(
+      `/api/registrations/business/${tournamentId}`,
+      formData
+    ),
+    submitJuniorRegistration: (tournamentId, formData) => api.post(
+      `/api/registrations/junior/${tournamentId}`,
+      formData
+    ),
+    getAll: () => api.get('/api/admin/registrations'),
+    getByTournament: (tournamentId) => api.get(`/api/admin/registrations/tournament/${tournamentId}`),
+    updateStatus: (id, status) => api.patch(`/api/admin/registrations/${id}/status`, { status }),
+    updatePaymentStatus: (id, paymentStatus) => api.patch(
+      `/api/admin/registrations/${id}/payment`,
+      { paymentStatus }
+    ),
+    delete: (id) => api.delete(`/api/admin/registrations/${id}`)
+  },
+
+  // Contact endpoints
+  contact: {
+    submit: (data) => api.post('/api/contact', data),
+    getAll: () => api.get('/api/admin/contact'),
+    updateStatus: (id, status) => api.patch(`/api/admin/contact/${id}/status`, { status }),
+    delete: (id) => api.delete(`/api/admin/contact/${id}`)
   }
 };
 
-// Tournament Services
-export const tournamentService = {
-  create: async (data) => {
-    try {
-      console.log('Creating tournament:', data);
-      const response = await axiosInstance.post('/admin/tournaments', data);
-      console.log('Tournament created:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating tournament:', error.response?.data || error);
-      throw error;
-    }
-  },
-
-  getAll: async () => {
-    try {
-      console.log('Fetching all tournaments');
-      const response = await axiosInstance.get('/admin/tournaments');
-      console.log('Tournaments fetched:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching tournaments:', error.response?.data || error);
-      throw error;
-    }
-  },
-
-  getOne: async (id) => {
-    try {
-      console.log('Fetching tournament:', id);
-      const response = await axiosInstance.get(`/admin/tournaments/${id}`);
-      console.log('Tournament fetched:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching tournament:', error.response?.data || error);
-      throw error;
-    }
-  },
-
-  update: async (id, data) => {
-    try {
-      console.log('Updating tournament:', { id, data });
-      const response = await axiosInstance.put(`/admin/tournaments/${id}`, data);
-      console.log('Tournament updated:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating tournament:', {
-        error: error.response?.data || error,
-        status: error.response?.status,
-        url: error.config?.url,
-        data: error.config?.data
-      });
-      throw error;
-    }
-  },
-
-  delete: async (id) => {
-    try {
-      console.log('Deleting tournament:', id);
-      const response = await axiosInstance.delete(`/admin/tournaments/${id}`);
-      console.log('Tournament deleted:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting tournament:', error.response?.data || error);
-      throw error;
-    }
-  }
-};
-
-export default axiosInstance;
+export default api;

@@ -1,19 +1,52 @@
 import api from './api';
+import { toast } from 'react-toastify';
 
-export const login = async (credentials) => {
-  try {
-    const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+export const authService = {
+  login: async (credentials) => {
+    try {
+      const response = await api.post('/api/auth/login', credentials);  // Added /api prefix
+      if (response.data.success && response.data.data.token) {
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        return response.data.data;
+      }
+      return null;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        toast.error('Too many attempts. Please wait a moment and try again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Login failed. Please try again.');
+      }
+      throw error;
     }
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error.message;
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+
+  getCurrentUser: () => {
+    try {
+      const user = localStorage.getItem('user');
+      return user ? JSON.parse(user) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  verifyToken: async () => {
+    try {
+      const response = await api.get('/api/auth/verify');  // Added /api prefix
+      return response.data.success;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        // Don't throw on rate limit
+        return true;
+      }
+      throw error;
+    }
   }
 };
 
-export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-};
+export default authService;

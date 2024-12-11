@@ -1,13 +1,15 @@
-// backend/src/middleware/admin.js
-const adminAuth = async (req, res, next) => {
-    try {
-      if (!req.user.isAdmin) {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
-      next();
-    } catch (error) {
-      res.status(403).json({ message: 'Admin access denied' });
+const adminMiddleware = (req, res, next) => {
+    // List of admin IDs from your authentication system
+    const adminIds = ['1', '2', '3'];
+  
+    if (!req.user || !adminIds.includes(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
     }
+  
+    next();
   };
   
-  module.exports = adminAuth;
+  module.exports = adminMiddleware;

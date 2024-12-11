@@ -1,8 +1,7 @@
-// backend/src/models/Registration.js
 const mongoose = require('mongoose');
 
-const registrationSchema = new mongoose.Schema({
-  tournament: {
+const RegistrationSchema = new mongoose.Schema({
+  tournamentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Tournament',
     required: true
@@ -20,54 +19,26 @@ const registrationSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
     trim: true
   },
-  handicap: {
-    type: Number,
-    min: 0,
-    max: 54 // Standard golf handicap range
-  },
-  paymentStatus: {
+  status: {
     type: String,
-    enum: ['pending', 'completed'],
+    enum: ['pending', 'confirmed', 'cancelled'],
     default: 'pending'
   },
   registrationDate: {
     type: Date,
     default: Date.now
   },
-  status: {
+  paymentStatus: {
     type: String,
-    enum: ['confirmed', 'waitlist', 'cancelled'],
-    default: 'confirmed'
-  },
-  notes: {
-    type: String,
-    trim: true
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
   }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
-// Add an index to improve query performance
-registrationSchema.index({ tournament: 1, registrationDate: -1 });
+RegistrationSchema.index({ tournamentId: 1, email: 1 }, { unique: true });
 
-// Virtual for formatted date
-registrationSchema.virtual('formattedDate').get(function() {
-  return this.registrationDate.toLocaleDateString();
-});
-
-// Virtual for full payment status
-registrationSchema.virtual('paymentStatusFormatted').get(function() {
-  return this.paymentStatus.charAt(0).toUpperCase() + this.paymentStatus.slice(1);
-});
-
-// Method to check if registration can be cancelled
-registrationSchema.methods.canBeCancelled = function() {
-  return this.status !== 'cancelled';
-};
-
-module.exports = mongoose.model('Registration', registrationSchema);
+module.exports = mongoose.model('Registration', RegistrationSchema);

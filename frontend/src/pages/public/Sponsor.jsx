@@ -1,67 +1,117 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import { Shield, Target, Users, Megaphone } from 'lucide-react';
 
 const Sponsor = () => {
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-10">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-4xl font-bold text-emerald-700 mb-6">Sponsorship Opportunities</h1>
-          <p className="text-lg text-gray-700 mb-8">
-            Become a sponsor of BirdieWay Golf and showcase your brand at our prestigious tournaments.
-            Supporting our events gives you a unique opportunity to connect with golfers, families, and
-            communities across all three leagues.
-          </p>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
 
-          <div className="space-y-6">
-            {/* Title Sponsor */}
-            <div className="p-6 border rounded-lg hover:shadow-lg transition-shadow">
-              <h2 className="text-2xl font-semibold text-emerald-600">Title Sponsor </h2>
-              <ul className="mt-4 text-gray-600 space-y-2 list-disc pl-6">
-                <li>Your name as part of BirdieWay branding (e.g., "BirdieWay by [Sponsor Name]")</li>
-                <li>Tournament naming rights for all three leagues</li>
-                <li>Prominent signage/banner placement at all tournaments</li>
-                <li>Featured social media post across BirdieWay platforms</li>
-              </ul>
-            </div>
-
-            {/* Gold Sponsor */}
-            <div className="p-6 border rounded-lg hover:shadow-lg transition-shadow">
-              <h2 className="text-2xl font-semibold text-emerald-600">Gold Sponsor</h2>
-              <ul className="mt-4 text-gray-600 space-y-2 list-disc pl-6">
-                <li>Tournament naming rights for one league</li>
-                <li>Signage/banner placement at all tournaments across three leagues</li>
-                <li>Opportunity to set up a booth at any tournament</li>
-                <li>Featured social media post across BirdieWay platforms</li>
-              </ul>
-            </div>
-
-            {/* Silver Sponsor */}
-            <div className="p-6 border rounded-lg hover:shadow-lg transition-shadow">
-              <h2 className="text-2xl font-semibold text-emerald-600">Silver Sponsor </h2>
-              <ul className="mt-4 text-gray-600 space-y-2 list-disc pl-6">
-                <li>Signage/banner placement at every tournament across all three leagues</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Call to Action */}
-          <div className="mt-10 bg-emerald-50 p-6 rounded-lg shadow-inner text-center">
-            <h3 className="text-xl font-semibold text-emerald-700 mb-4">Interested in Sponsoring?</h3>
-            <p className="text-gray-600 mb-6">
-              For inquiries or to become a sponsor, please send us a message using our contact form. We
-              look forward to partnering with you!
+      {/* Hero Section */}
+      <div className="relative h-[400px]">
+        <img
+          src="/src/assets/sponsor.jpg"
+          alt="Become a Sponsor"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl text-white font-bold mb-4">
+              Become a Sponsor
+            </h1>
+            <p className="text-xl text-white max-w-2xl mx-auto">
+              Partner with Birdieway Golf to showcase your brand and support the growth of golf in our community.
             </p>
-            <Link
-              to="/contact"
-              className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-lg 
-                hover:bg-emerald-700 transition-all duration-300"
-            >
-              Contact Us
-            </Link>
           </div>
         </div>
       </div>
+
+      {/* Benefits Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Sponsor With Us?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: Shield,
+                title: 'Brand Visibility',
+                description: 'Feature your brand with banners at all tournaments and events.'
+              },
+              {
+                icon: Target,
+                title: 'Community Engagement',
+                description: 'Help support junior golf leagues and business tournaments.'
+              },
+              {
+                icon: Users,
+                title: 'Networking Opportunities',
+                description: 'Connect with businesses, community leaders, and golf enthusiasts.'
+              },
+              {
+                icon: Megaphone,
+                title: 'Exclusive Opportunities',
+                description: 'Gain enhanced visibility through premium sponsorship levels.'
+              }
+            ].map((benefit, index) => (
+              <div key={index} className="text-center p-6 bg-white rounded-lg shadow-md">
+                <benefit.icon className="h-12 w-12 text-emerald-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
+                <p className="text-gray-600">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sponsorship Levels Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Our Sponsorship Opportunities</h2>
+          <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
+            Join us as a sponsor and make a meaningful impact. Whether it’s banners at every event or naming rights for tournaments, we have opportunities to showcase your brand.
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                title: 'Platinum Sponsor',
+                description: `
+                  Receive exclusive naming rights for a tournament in both the Junior and Business leagues. Your brand will also be prominently displayed with banners at every tournament.
+                `
+              },
+              {
+                title: 'Gold Sponsor',
+                description: `
+                  Your brand will be showcased with banners at every tournament and league event. A great way to build recognition and engage with the community.
+                `
+              }
+            ].map((level, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-2xl font-bold text-center mb-4">{level.title}</h3>
+                <p className="text-gray-600 text-center">{level.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <h2 className="text-3xl font-bold mb-6">Interested in Sponsoring?</h2>
+          <p className="text-gray-600 mb-8">
+            Contact us to explore tailored sponsorship opportunities that align with your goals. We’re excited to partner with you!
+          </p>
+          <a
+            href="mailto:birdiewaygolf@gmail.com"
+            className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Contact Us
+          </a>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };
