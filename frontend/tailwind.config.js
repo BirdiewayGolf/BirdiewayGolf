@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -18,37 +18,37 @@ module.exports = {
         },
       },
       height: {
-        navbar: '80px', // Consistent with your navbar height
+        navbar: '80px',
       },
       spacing: {
-        navbar: '80px', // For spacing related to navbar
+        navbar: '80px',
       },
       maxWidth: {
-        navbar: '1280px', // Match your nav-container max-width
+        navbar: '1280px',
       },
       fontFamily: {
-        serif: ['Playfair Display', 'serif'], // Serif font for logo/text
+        serif: ['Playfair Display', 'serif'],
       },
       backdropBlur: {
-        navbar: '8px', // Backdrop blur specifically for navbar
+        navbar: '8px',
       },
       boxShadow: {
-        navbar: '0 4px 12px rgba(0, 0, 0, 0.05)', // Subtle shadow for navbar
-        'navbar-scrolled': '0 2px 8px rgba(0, 0, 0, 0.1)', // Enhanced shadow on scroll
+        navbar: '0 4px 12px rgba(0, 0, 0, 0.05)',
+        'navbar-scrolled': '0 2px 8px rgba(0, 0, 0, 0.1)',
       },
       transitionProperty: {
-        navbar: 'all', // Apply transitions to all navbar properties
+        navbar: 'all',
       },
       transitionTimingFunction: {
-        navbar: 'cubic-bezier(0.4, 0, 0.2, 1)', // Smooth animation
+        navbar: 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
       transitionDuration: {
-        navbar: '300ms', // Animation duration for navbar transitions
+        navbar: '300ms',
       },
       zIndex: {
-        navbar: '50', // Ensure navbar is always on top
+        navbar: '50',
       },
     },
   },
   plugins: [],
-};
+}
