@@ -1,5 +1,9 @@
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 
+// Layout Components
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
+
 // Public Pages
 import Home from './pages/public/Home';
 import About from './pages/public/About';
@@ -30,15 +34,37 @@ import TournamentStandingsList from './components/admin/TournamentStandingsList'
 // Auth Components
 import PrivateRoute from './components/auth/PrivateRoute';
 
+// 404 Page
+const NotFound = () => (
+  <>
+    <Navbar />
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
+      <p className="text-gray-600 mb-8">The page you're looking for doesn't exist.</p>
+      <a href="/" className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors">
+        Return Home
+      </a>
+    </div>
+    <Footer />
+  </>
+);
+
 // Root Layout
 const RootLayout = () => {
-  return <Outlet />;
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+      <Footer />
+    </>
+  );
 };
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <NotFound />,
     children: [
       // Public Routes
       {
@@ -46,88 +72,93 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: '/about',
+        path: 'about',
         element: <About />,
       },
       {
-        path: '/contact',
+        path: 'contact',
         element: <Contact />,
       },
       {
-        path: '/fundraising',
+        path: 'fundraising',
         element: <Fundraising />,
       },
       {
-        path: '/sponsor',
+        path: 'sponsor',
         element: <Sponsor />,
       },
 
       // Tournament Routes
       {
-        path: '/tournaments',
+        path: 'tournaments',
         element: <TournamentList />,
       },
       {
-        path: '/tournaments/league/:league',
+        path: 'tournaments/league/:league',
         element: <TournamentList />,
       },
       {
-        path: '/tournaments/details/:id',
+        path: 'tournaments/details/:id',
         element: <TournamentDetails />,
       },
       {
-        path: '/standings/:league',
+        path: 'standings/:league',
         element: <Standings />,
       },
 
       // Registration Routes
       {
-        path: '/register/business/:id',
+        path: 'register/business/:id',
         element: <BusinessRegistrationForm />,
       },
       {
-        path: '/register/junior/:id',
+        path: 'register/junior/:id',
         element: <JuniorRegistrationForm />,
       },
       {
-        path: '/register/longday/:id',
+        path: 'register/longday/:id',
         element: <LongDayRegistrationForm />,
       },
       {
-        path: '/register/fundraiser/:id',
+        path: 'register/fundraiser/:id',
         element: <FundraiserRegistrationForm />,
       },
 
       // Admin Routes
       {
-        path: '/admin/login',
+        path: 'admin/login',
         element: <LoginPage />,
       },
       {
-        path: '/admin',
+        path: 'admin',
         element: <PrivateRoute><AdminDashboard /></PrivateRoute>,
       },
       {
-        path: '/admin/tournaments',
+        path: 'admin/tournaments',
         element: <PrivateRoute><AdminTournamentList /></PrivateRoute>,
       },
       {
-        path: '/admin/tournaments/:id/edit',
+        path: 'admin/tournaments/:id/edit',
         element: <PrivateRoute><EditTournament /></PrivateRoute>,
       },
       {
-        path: '/admin/registrations',
+        path: 'admin/registrations',
         element: <PrivateRoute><RegistrationsList /></PrivateRoute>,
       },
       {
-        path: '/admin/standings',
+        path: 'admin/standings',
         element: <PrivateRoute><TournamentStandingsList /></PrivateRoute>,
       },
       {
-        path: '/admin/standings/:tournamentId',
+        path: 'admin/standings/:tournamentId',
         element: <PrivateRoute><StandingsEditor /></PrivateRoute>,
       },
     ],
+  },
+  // Catch-all route for 404
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ]);
 
