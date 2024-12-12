@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist', // Output directory for build artifacts
-    sourcemap: true, // Generate sourcemap for debugging
+    sourcemap: true, // Enables source maps for easier debugging
   },
-  base: '/', // Ensures correct base path for deployment
+  base: '/', // Ensures the correct base path for assets
 });

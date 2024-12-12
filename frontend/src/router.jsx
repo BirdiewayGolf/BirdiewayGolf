@@ -60,6 +60,7 @@ const RootLayout = () => {
   );
 };
 
+// Router Configuration
 const router = createBrowserRouter([
   {
     path: '/',
@@ -67,99 +68,36 @@ const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       // Public Routes
-      {
-        path: '/',
-        element: <Home />,
-      },
-      {
-        path: 'about',
-        element: <About />,
-      },
-      {
-        path: 'contact',
-        element: <Contact />,
-      },
-      {
-        path: 'fundraising',
-        element: <Fundraising />,
-      },
-      {
-        path: 'sponsor',
-        element: <Sponsor />,
-      },
+      { path: '/', element: <Home /> },
+      { path: 'about', element: <About /> },
+      { path: 'contact', element: <Contact /> },
+      { path: 'fundraising', element: <Fundraising /> },
+      { path: 'sponsor', element: <Sponsor /> },
 
       // Tournament Routes
-      {
-        path: 'tournaments',
-        element: <TournamentList />,
-      },
-      {
-        path: 'tournaments/league/:league',
-        element: <TournamentList />,
-      },
-      {
-        path: 'tournaments/details/:id',
-        element: <TournamentDetails />,
-      },
-      {
-        path: 'standings/:league',
-        element: <Standings />,
-      },
+      { path: 'tournaments', element: <TournamentList /> },
+      { path: 'tournaments/league/:league', element: <TournamentList /> },
+      { path: 'tournaments/details/:id', element: <TournamentDetails /> },
+      { path: 'standings/:league', element: <Standings /> },
 
       // Registration Routes
-      {
-        path: 'register/business/:id',
-        element: <BusinessRegistrationForm />,
-      },
-      {
-        path: 'register/junior/:id',
-        element: <JuniorRegistrationForm />,
-      },
-      {
-        path: 'register/longday/:id',
-        element: <LongDayRegistrationForm />,
-      },
-      {
-        path: 'register/fundraiser/:id',
-        element: <FundraiserRegistrationForm />,
-      },
+      { path: 'register/business/:id', element: <BusinessRegistrationForm /> },
+      { path: 'register/junior/:id', element: <JuniorRegistrationForm /> },
+      { path: 'register/longday/:id', element: <LongDayRegistrationForm /> },
+      { path: 'register/fundraiser/:id', element: <FundraiserRegistrationForm /> },
 
       // Admin Routes
-      {
-        path: 'admin/login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'admin',
-        element: <PrivateRoute><AdminDashboard /></PrivateRoute>,
-      },
-      {
-        path: 'admin/tournaments',
-        element: <PrivateRoute><AdminTournamentList /></PrivateRoute>,
-      },
-      {
-        path: 'admin/tournaments/:id/edit',
-        element: <PrivateRoute><EditTournament /></PrivateRoute>,
-      },
-      {
-        path: 'admin/registrations',
-        element: <PrivateRoute><RegistrationsList /></PrivateRoute>,
-      },
-      {
-        path: 'admin/standings',
-        element: <PrivateRoute><TournamentStandingsList /></PrivateRoute>,
-      },
-      {
-        path: 'admin/standings/:tournamentId',
-        element: <PrivateRoute><StandingsEditor /></PrivateRoute>,
-      },
+      { path: 'admin/login', element: <LoginPage /> },
+      { path: 'admin', element: <PrivateRoute><AdminDashboard /></PrivateRoute> },
+      { path: 'admin/tournaments', element: <PrivateRoute><AdminTournamentList /></PrivateRoute> },
+      { path: 'admin/tournaments/:id/edit', element: <PrivateRoute><EditTournament /></PrivateRoute> },
+      { path: 'admin/registrations', element: <PrivateRoute><RegistrationsList /></PrivateRoute> },
+      { path: 'admin/standings', element: <PrivateRoute><TournamentStandingsList /></PrivateRoute> },
+      { path: 'admin/standings/:tournamentId', element: <PrivateRoute><StandingsEditor /></PrivateRoute> },
     ],
   },
   // Catch-all route for 404
-  {
-    path: '*',
-    element: <NotFound />,
-  },
+  { path: '*', element: <NotFound /> },
 ]);
 
 export default router;
