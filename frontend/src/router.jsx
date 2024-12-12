@@ -19,7 +19,6 @@ import Standings from './components/public/Standings';
 // Registration Components
 import BusinessRegistrationForm from './components/public/registration/BusinessRegistrationForm';
 import JuniorRegistrationForm from './components/public/registration/JuniorRegistrationForm';
-import FundraiserRegistrationForm from './components/public/registration/FundraiserRegistrationForm';
 
 // Admin Components
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -82,7 +81,6 @@ const router = createBrowserRouter([
       // Registration Routes
       { path: 'register/business/:id', element: <BusinessRegistrationForm /> },
       { path: 'register/junior/:id', element: <JuniorRegistrationForm /> },
-      { path: 'register/fundraiser/:id', element: <FundraiserRegistrationForm /> },
 
       // Admin Routes
       { path: 'admin/login', element: <LoginPage /> },
