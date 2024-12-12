@@ -15,48 +15,35 @@ import Sponsor from './pages/public/Sponsor';
 import TournamentList from './components/public/TournamentList';
 import TournamentDetails from './components/public/TournamentDetails';
 import Standings from './components/public/Standings';
-
-// Registration Components
 import BusinessRegistrationForm from './components/public/registration/BusinessRegistrationForm';
 import JuniorRegistrationForm from './components/public/registration/JuniorRegistrationForm';
+import LongDayRegistrationForm from './components/public/registration/LongDayRegistrationForm';
 
-// Admin Components
+// Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminTournamentList from './pages/admin/TournamentList';
 import EditTournament from './pages/admin/EditTournament';
 import LoginPage from './pages/admin/LoginPage';
 import RegistrationsList from './pages/admin/RegistrationsList';
-import StandingsEditor from './components/admin/StandingsManager';
-import TournamentStandingsList from './components/admin/TournamentStandingsList';
+import TournamentListAdmin from './pages/admin/TournamentList';
+
+// Admin Components
+import StandingsManager from './components/admin/StandingsManager';
+import TournamentForm from './components/admin/TournamentForm';
 
 // Auth Components
 import PrivateRoute from './components/auth/PrivateRoute';
 
 // 404 Page
-const NotFound = () => (
+import NotFound from './pages/NotFound';
+
+// Root Layout
+const RootLayout = () => (
   <>
     <Navbar />
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
-      <p className="text-gray-600 mb-8">The page you're looking for doesn't exist.</p>
-      <a href="/" className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors">
-        Return Home
-      </a>
-    </div>
+    <Outlet />
     <Footer />
   </>
 );
-
-// Root Layout
-const RootLayout = () => {
-  return (
-    <>
-      <Navbar />
-      <Outlet />
-      <Footer />
-    </>
-  );
-};
 
 // Router Configuration
 const router = createBrowserRouter([
@@ -74,22 +61,22 @@ const router = createBrowserRouter([
 
       // Tournament Routes
       { path: 'tournaments', element: <TournamentList /> },
-      { path: 'tournaments/league/:league', element: <TournamentList /> },
       { path: 'tournaments/details/:id', element: <TournamentDetails /> },
-      { path: 'standings/:league', element: <Standings /> },
+      { path: 'standings', element: <Standings /> },
 
       // Registration Routes
-      { path: 'register/business/:id', element: <BusinessRegistrationForm /> },
-      { path: 'register/junior/:id', element: <JuniorRegistrationForm /> },
+      { path: 'register/business', element: <BusinessRegistrationForm /> },
+      { path: 'register/junior', element: <JuniorRegistrationForm /> },
+      { path: 'register/longday', element: <LongDayRegistrationForm /> },
 
       // Admin Routes
       { path: 'admin/login', element: <LoginPage /> },
       { path: 'admin', element: <PrivateRoute><AdminDashboard /></PrivateRoute> },
-      { path: 'admin/tournaments', element: <PrivateRoute><AdminTournamentList /></PrivateRoute> },
+      { path: 'admin/tournaments', element: <PrivateRoute><TournamentListAdmin /></PrivateRoute> },
+      { path: 'admin/tournaments/new', element: <PrivateRoute><TournamentForm /></PrivateRoute> },
       { path: 'admin/tournaments/:id/edit', element: <PrivateRoute><EditTournament /></PrivateRoute> },
       { path: 'admin/registrations', element: <PrivateRoute><RegistrationsList /></PrivateRoute> },
-      { path: 'admin/standings', element: <PrivateRoute><TournamentStandingsList /></PrivateRoute> },
-      { path: 'admin/standings/:tournamentId', element: <PrivateRoute><StandingsEditor /></PrivateRoute> },
+      { path: 'admin/standings', element: <PrivateRoute><StandingsManager /></PrivateRoute> },
     ],
   },
   // Catch-all route for 404
