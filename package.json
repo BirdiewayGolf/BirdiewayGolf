@@ -1,0 +1,57 @@
+{
+  "name": "birdieway-golf",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node server/index.js\"",
+    "build": "tsc && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+  
+    "@hookform/resolvers": "^3.3.4",
+    "@stripe/stripe-js": "^2.4.0",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.51.0",
+    "react-router-dom": "^6.22.3",
+    "tailwind-merge": "^2.2.1",
+    "zod": "^3.22.4",
+    "zustand": "^4.5.2",
+
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.12"
+  },
+  "devDependencies": {
+
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "@types/nodemailer": "^6.4.14",
+    "@types/react": "^18.2.61",
+    "@types/react-dom": "^18.2.19",
+
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.4.11",
+    "concurrently": "^8.2.2",
+    
+
+    "@tailwindcss/forms": "^0.5.7",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
