@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "concurrently \"vite --port 5173\" \"node server/index.js\"",
-  "build": "vite build && tsc -p tsconfig.server.json",
-  "lint": "eslint .",
-  "preview": "vite preview",
-  "server": "node server/index.js",
-  "typecheck": "tsc --noEmit",
-  "clean": "rm -rf dist",
-  "start": "node server/index.js"
-},
+    "dev": "concurrently \"vite --port 5173\" \"node server/index.js\"",
+    "build": "./node_modules/.bin/vite build && tsc -p tsconfig.server.json",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "start": "node server/index.js"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@stripe/stripe-js": "^2.4.0",
@@ -42,7 +42,7 @@
     "@types/nodemailer": "^6.4.14",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.18",
     "concurrently": "^8.2.2",
     "postcss": "^8.4.35",
