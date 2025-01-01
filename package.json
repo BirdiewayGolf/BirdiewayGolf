@@ -11,11 +11,12 @@
     "server": "node server/index.js",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "start": "node server/index.js"
+    "start": "node dist/server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@stripe/stripe-js": "^2.4.0",
+    "@tailwindcss/forms": "^0.5.7",
     "@types/stripe": "^8.0.416",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.18",
@@ -40,7 +41,6 @@
   },
   "devDependencies": {
     "@netlify/functions": "^3.0.0",
-    "@tailwindcss/forms": "^0.5.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.17.11",
