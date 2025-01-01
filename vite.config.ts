@@ -17,48 +17,12 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.NODE_ENV === 'production' 
+          ? process.env.VITE_API_URL 
+          : 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.error('Proxy error:', err);
-          });
-          proxy.on('proxyRes', (proxyRes, req) => {
-            console.log('Proxied request:', req.method, req.url);
-            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-            proxyRes.headers['Content-Type'] = 'application/json';
-          });
-        }
-      },
-      '/.netlify/functions': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/\.netlify\/functions/, '/api'),
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.error('Proxy error:', err);
-          });
-          proxy.on('proxyRes', (proxyRes, req) => {
-            console.log('Proxied request:', req.method, req.url);
-            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-            proxyRes.headers['Content-Type'] = 'application/json';
-          });
-        }
       }
-    },
-    hmr: {
-      protocol: 'ws',
-      timeout: 1000,
-      overlay: false
-    },
-    watch: {
-      usePolling: false,
-      interval: 100
     }
   },
   build: {
