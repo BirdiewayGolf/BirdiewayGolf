@@ -1,14 +1,14 @@
-import { loadStripe } from '@stripe/stripe-js';
-import { STRIPE_PUBLIC_KEY } from './config/stripe';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { STRIPE_CONFIG } from './config/stripe';
 
-let stripePromise: Promise<any> | null = null;
+let stripePromise: Promise<Stripe | null> | null = null;
 
 export const getStripe = () => {
   if (!stripePromise) {
-    if (!STRIPE_PUBLIC_KEY) {
+    if (!STRIPE_CONFIG.publicKey) {
       throw new Error('Stripe public key is not configured');
     }
-    stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+    stripePromise = loadStripe(STRIPE_CONFIG.publicKey);
   }
   return stripePromise;
 };

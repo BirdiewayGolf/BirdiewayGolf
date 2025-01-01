@@ -1,12 +1,38 @@
-// Price configuration in cents
-export const PRICES = {
-  business: 6800, // $6,800
-  junior: 500,    // $500
-  longday: 1200,  // $1,200
+// Import types and ensure environmental type safety
+interface StripeConfig {
+  publicKey: string | undefined;
+  isConfigured: boolean;
+}
+
+interface LeaguePricing {
+  readonly [key: string]: number;
+  readonly business: number;
+  readonly junior: number;
+  readonly longday: number;
+}
+
+// Stripe configuration with proper type checking
+export const STRIPE_CONFIG: StripeConfig = {
+  publicKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
+  isConfigured: Boolean(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+};
+
+// League pricing configuration with proper typing and documentation
+export const LEAGUE_PRICES: LeaguePricing = {
+  business: 680000,  // $6,800 in cents
+  junior: 50000,     // $500 in cents
+  longday: 150000    // $1,500 in cents
 } as const;
 
-// Environment variables
-export const STRIPE_CONFIG = {
-  publicKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
-  isConfigured: Boolean(import.meta.env.VITE_STRIPE_PUBLIC_KEY),
-} as const;
+// Validation utility to ensure prices are properly formatted for Stripe
+export const validatePrice = (price: number): boolean => {
+  return Number.isInteger(price) && price > 0;
+};
+
+// Helper function to format price for display
+export const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(price / 100);
+};

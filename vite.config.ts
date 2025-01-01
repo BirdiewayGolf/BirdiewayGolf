@@ -2,10 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -15,39 +13,68 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/assets'),
     },
   },
-
   server: {
-    port: 5174,
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5174',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error('Proxy error:', err);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('Proxied request:', req.method, req.url);
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+            proxyRes.headers['Content-Type'] = 'application/json';
+          });
+        }
+      },
+      '/.netlify/functions': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/\.netlify\/functions/, '/api'),
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error('Proxy error:', err);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('Proxied request:', req.method, req.url);
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+            proxyRes.headers['Content-Type'] = 'application/json';
+          });
+        }
       }
     },
-    // Add CORS headers
-    cors: true,
+    hmr: {
+      protocol: 'ws',
+      timeout: 1000,
+      overlay: false
+    },
+    watch: {
+      usePolling: false,
+      interval: 100
+    }
   },
-
-  // Build configuration
   build: {
     outDir: 'dist',
     sourcemap: true,
-    // Reduce chunk size warnings threshold
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
           react: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          form: ['react-hook-form', '@hookform/resolvers'],
-        },
-      },
-    },
+          form: ['react-hook-form', '@hookform/resolvers/zod']
+        }
+      }
+    }
   },
-
-  // Optimize deps
   optimizeDeps: {
     include: [
       'react',
@@ -57,7 +84,7 @@ export default defineConfig({
       '@hookform/resolvers/zod',
       'zustand',
       'clsx',
-      'tailwind-merge',
-    ],
-  },
+      'tailwind-merge'
+    ]
+  }
 });

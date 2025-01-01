@@ -1,24 +1,137 @@
 import express from 'express';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import Stripe from 'stripe';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config();
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16'
+});
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length >= 10;
+}
+
+function mapStripeStatus(stripeStatus) {
+  const statusMap = {
+    'paid': { status: 'confirmed', paymentStatus: 'paid' },
+    'unpaid': { status: 'pending', paymentStatus: 'pending' },
+    'expired': { status: 'cancelled', paymentStatus: 'cancelled' },
+    'canceled': { status: 'cancelled', paymentStatus: 'cancelled' },
+    'complete': { status: 'confirmed', paymentStatus: 'paid' },
+    'failed': { status: 'cancelled', paymentStatus: 'failed' }
+  };
+  return statusMap[stripeStatus] || { status: 'pending', paymentStatus: 'pending' };
+}
 
 const app = express();
-const port = 5174;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`${timestamp} [${req.method}] ${req.url}`);
+  if (req.method === 'POST' || req.method === 'DELETE') {
+    console.log('Request body:', req.body);
+  }
+  next();
+});
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_ADDRESS,
-    pass: process.env.EMAIL_PASSWORD
+    pass: process.env.EMAIL_APP_PASSWORD,
   },
-  secure: true
+  secure: true,
 });
+
+transporter.verify()
+  .then(() => {
+    console.log('Email configuration verified successfully');
+    console.log(`Email configured for: ${process.env.EMAIL_ADDRESS}`);
+  })
+  .catch((error) => {
+    console.error('Email verification failed:', error);
+    process.exit(1);
+  });
+
+// Email formatting function
+const formatRegistrationData = (leagueType, formData) => {
+  switch (leagueType) {
+    case 'business':
+      return `
+        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h3 style="margin-bottom: 10px; color: #0A5C36;">Business League Registration Details</h3>
+          <p><strong>Team Name:</strong> ${formData.teamName || 'N/A'}</p>
+          <p><strong>Company Name:</strong> ${formData.companyName || 'N/A'}</p>
+          <p><strong>Contact Name:</strong> ${formData.contactName || 'N/A'}</p>
+          <p><strong>Email:</strong> ${formData.email || 'N/A'}</p>
+          <p><strong>Phone:</strong> ${formData.phone || 'N/A'}</p>
+        </div>
+      `;
+    
+    case 'junior':
+      return `
+        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h3 style="margin-bottom: 10px; color: #0A5C36;">Junior League Registration Details</h3>
+          <p><strong>Player Name:</strong> ${formData.playerName || 'N/A'}</p>
+          <p><strong>Date of Birth:</strong> ${formData.dateOfBirth || 'N/A'}</p>
+          <p><strong>Shirt Size:</strong> ${formData.shirtSize || 'N/A'}</p>
+          <p><strong>Parent Name:</strong> ${formData.parentName || 'N/A'}</p>
+          <p><strong>Parent Email:</strong> ${formData.parentEmail || 'N/A'}</p>
+          <p><strong>Parent Phone:</strong> ${formData.parentPhone || 'N/A'}</p>
+        </div>
+      `;
+    
+    case 'longday':
+      const playersHtml = formData.players 
+        ? formData.players.map((player, index) => `
+            <div style="background-color: #e9e9e9; padding: 10px; border-radius: 6px; margin: 5px 0;">
+              <p><strong>Player ${index + 1} Name:</strong> ${player.name || 'N/A'}</p>
+              <p><strong>Email:</strong> ${player.email || 'N/A'}</p>
+              <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
+              <p><strong>Shirt Size:</strong> ${player.shirtSize || 'N/A'}</p>
+            </div>
+          `).join('')
+        : '<p>No players registered</p>';
+
+      return `
+        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h3 style="margin-bottom: 10px; color: #0A5C36;">Long Day League Registration Details</h3>
+          <p><strong>Team Name:</strong> ${formData.teamName || 'N/A'}</p>
+          <h4 style="margin-top: 15px;">Players:</h4>
+          ${playersHtml}
+        </div>
+      `;
+    
+    default:
+      return `
+        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <p>Unrecognized League Type</p>
+        </div>
+      `;
+  }
+};
 
 app.post('/api/contact', async (req, res) => {
   try {
@@ -28,6 +141,20 @@ app.post('/api/contact', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'All fields are required'
+      });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format'
+      });
+    }
+
+    if (!validatePhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number format'
       });
     }
 
@@ -50,16 +177,276 @@ app.post('/api/contact', async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.json({ success: true });
+
+    return res.status(200).json({
+      success: true
+    });
+
   } catch (error) {
-    console.error('Email error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || 'Failed to send email' 
+    console.error('Server error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send email'
     });
   }
 });
 
+app.get('/api/registrations', async (req, res) => {
+  try {
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 100,
+      expand: ['data.customer']
+    });
+
+    const registrations = sessions.data
+      // Filter out cancelled sessions
+      .filter(session => {
+        // If metadata shows it's cancelled, filter it out
+        if (session.metadata?.status === 'cancelled') return false;
+        // If Stripe status is expired/canceled, filter it out
+        if (session.status === 'expired' || session.status === 'canceled') return false;
+        return true;
+      })
+      .map(session => {
+        const { status, paymentStatus } = mapStripeStatus(session.payment_status);
+        return {
+          id: session.id,
+          customerEmail: session.customer_email,
+          amount: session.amount_total,
+          status,
+          paymentStatus,
+          leagueType: session.metadata?.leagueType,
+          registrationData: session.metadata?.registrationData
+            ? JSON.parse(session.metadata.registrationData)
+            : {},
+          createdAt: session.created
+        };
+      });
+
+    res.json(registrations);
+  } catch (error) {
+    console.error('Error fetching registrations:', error);
+    res.status(500).json({ error: 'Failed to fetch registrations' });
+  }
+});
+
+app.delete('/api/registrations/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    console.log('Attempting to delete session:', sessionId);
+    
+    // First retrieve the session to verify it exists
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // We'll use Stripe's metadata to mark the session as cancelled
+    try {
+      await stripe.checkout.sessions.update(sessionId, {
+        metadata: {
+          ...session.metadata,
+          status: 'cancelled',
+          cancelledAt: new Date().toISOString()
+        }
+      });
+      console.log('Session marked as cancelled:', sessionId);
+    } catch (updateError) {
+      console.error('Error updating session:', updateError);
+      // Continue even if update fails
+    }
+    
+    // Send cancellation email if it was a paid registration
+    if (session.payment_status === 'paid') {
+      const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
+      
+      const cancellationEmail = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0A5C36;">Registration Cancelled</h2>
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+            <p>The following registration has been cancelled:</p>
+            <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
+            <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
+            ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
+          </div>
+        </div>
+      `;
+
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_ADDRESS,
+          to: session.customer_email,
+          cc: process.env.EMAIL_ADDRESS,
+          subject: 'BirdieWay Golf - Registration Cancelled',
+          html: cancellationEmail
+        });
+      } catch (emailError) {
+        console.error('Failed to send cancellation email:', emailError);
+      }
+    }
+
+    res.json({ 
+      success: true,
+      message: 'Registration cancelled successfully',
+      sessionId,
+      status: 'cancelled',
+      paymentStatus: 'cancelled'
+    });
+  } catch (error) {
+    console.error('Error deleting registration:', error);
+    if (error.code === 'resource_missing') {
+      return res.status(404).json({
+        success: false,
+        error: 'Registration not found'
+      });
+    }
+    res.status(500).json({ 
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete registration'
+    });
+  }
+});
+
+app.post('/api/create-checkout', async (req, res) => {
+  try {
+    const { leagueType, price, formData } = req.body;
+
+    if (!leagueType || !price) {
+      return res.status(400).json({
+        error: 'Missing required fields: leagueType and price are required'
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${leagueType.charAt(0).toUpperCase() + leagueType.slice(1)} League Registration`,
+              description: `Registration for ${leagueType} league`
+            },
+            unit_amount: price
+          },
+          quantity: 1
+        }
+      ],
+      mode: 'payment',
+      success_url: `http://localhost:5173/registration/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/registration/cancel`,
+      metadata: {
+        leagueType,
+        registrationData: JSON.stringify(formData)
+      },
+      customer_email: formData.email || formData.parentEmail || formData.player1?.email
+    });
+
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0A5C36;">New ${leagueType} League Registration</h2>
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+          <h3>Registration Details</h3>
+          <p><strong>League Type:</strong> ${leagueType}</p>
+          <p><strong>Amount:</strong> $${price/100}</p>
+          ${formatRegistrationData(leagueType, formData)}
+        </div>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_ADDRESS,
+      to: process.env.EMAIL_ADDRESS,
+      subject: `New ${leagueType} League Registration`,
+      html: emailContent
+    });
+
+    res.json({
+      id: session.id,
+      url: session.url
+    });
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to create checkout session'
+    });
+  }
+});
+
+app.post('/api/verify-payment', async (req, res) => {
+  try {
+    // Log the entire request body to see what's being sent
+    console.log('Verify Payment Request Body:', req.body);
+
+    // Extract sessionId from query params or body
+    const sessionId = req.body.sessionId || req.query.session_id;
+ // Check if sessionId is missing
+ if (!sessionId) {
+  return res.status(400).json({ 
+    success: false,
+    error: 'Session ID is required' 
+  });
+}
+
+const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+if (session.payment_status === 'paid') {
+  const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
+  
+  const confirmationEmail = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0A5C36;">Registration Confirmed</h2>
+      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+        <p>Payment Successful</p>
+        <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
+        <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
+        ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_ADDRESS,
+    to: session.customer_email,
+    cc: process.env.EMAIL_ADDRESS,
+    subject: 'BirdieWay Golf - Registration Confirmed',
+    html: confirmationEmail
+  });
+}
+
+const { status, paymentStatus } = mapStripeStatus(session.payment_status);
+res.json({
+  success: true,
+  status,
+  paymentStatus,
+  amount: session.amount_total,
+  league: session.metadata?.leagueType,
+  email: session.customer_email
+});
+} catch (error) {
+console.error('Payment verification error:', error);
+res.status(500).json({ 
+  success: false,
+  error: error instanceof Error ? error.message : 'Failed to verify payment' 
+});
+}
+});
+
+app.get('/api/health', (req, res) => {
+res.json({
+status: 'healthy',
+timestamp: new Date().toISOString(),
+environment: process.env.NODE_ENV || 'development'
+});
+});
+
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+console.log(`Server running on port ${port}`);
+console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+process.on('unhandledRejection', (reason) => {
+console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+console.error('Uncaught Exception:', error);
+process.exit(1);
 });

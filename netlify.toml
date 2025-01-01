@@ -10,14 +10,27 @@
 
 [functions]
   node_bundler = "esbuild"
+  included_files = [".env"]
+
+[build.environment]
+  NODE_ENV = "development"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/registrations/*"
+  to = "/.netlify/functions/delete-registration/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/registrations"
+  to = "/.netlify/functions/get-registrations"
+  status = 200
+  force = true
+  methods = ["GET"]
+
+[[redirects]]
+  from = "/api/registrations/*"
+  to = "/.netlify/functions/delete-registration/:splat"
+  status = 200
+  force = true
+  methods = ["DELETE", "OPTIONS"]

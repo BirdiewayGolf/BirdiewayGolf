@@ -1,3 +1,5 @@
+// /src/lib/types/league-pricing.ts
+
 export type LeagueType = 'business' | 'junior' | 'longday';
 
 export interface LeaguePricing {

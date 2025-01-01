@@ -1,8 +1,8 @@
-import type { ContactFormData } from '@/lib/types/contact';
+import type { ContactFormData, ContactResponse } from '../types/contact';
 
-export async function sendContactForm(data: ContactFormData): Promise<{ success: boolean }> {
+export async function sendContactForm(data: ContactFormData): Promise<ContactResponse> {
   try {
-    const response = await fetch('/api/contact', {
+    const response = await fetch('http://localhost:3000/api/contact', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -10,16 +10,20 @@ export async function sendContactForm(data: ContactFormData): Promise<{ success:
       body: JSON.stringify(data),
     });
 
+    const result = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.details || error.error || 'Failed to send message');
+      throw new Error(result.error || 'Failed to send message');
     }
 
-    return { success: true };
+    return {
+      success: true
+    };
+
   } catch (error) {
     console.error('Contact form error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to send message'
     };
   }

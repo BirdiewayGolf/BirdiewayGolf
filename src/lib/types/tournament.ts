@@ -1,22 +1,35 @@
-export type TournamentType = 'business' | 'junior' | 'longday';
-export type CourseType = '9hole' | '18hole';
-
 export interface Tournament {
   id: string;
   name: string;
-  type: TournamentType;
   date: string;
   location: string;
   description: string;
-  courseType: CourseType;
+  courseType: '9hole' | '18hole';
   coursePar: number;
-  pairings: TournamentPairing[];
+  type: TournamentType;
+  leaderboard?: LeaderboardEntry[];
+  pairings?: TournamentPairing[];
+  participants?: Participant[];
+}
+
+export interface LeaderboardEntry {
+  playerId: string;
+  playerName: string;
+  score: number;
+  position?: number;
 }
 
 export interface TournamentPairing {
   id: string;
-  groupNumber: number;
+  time: string;
   players: string[];
-  teeTime: string;
-  startingHole: number;
 }
+
+export interface Participant {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export type TournamentType = 'business' | 'junior' | 'longday';

@@ -14,6 +14,9 @@ export function RegistrationSuccess() {
         const response = await fetch('/.netlify/functions/verify-payment', {
           method: 'POST',
           body: JSON.stringify({ sessionId }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         const data = await response.json();
         setPaymentDetails(data);
@@ -52,25 +55,43 @@ export function RegistrationSuccess() {
             Thank you for registering with BirdieWay Golf. We're excited to have you join us!
           </p>
           
-          {paymentDetails && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <h2 className="font-semibold mb-2">Registration Details:</h2>
-              <ul className="space-y-2 text-gray-600">
-                <li>Amount Paid: ${paymentDetails.amount / 100}</li>
-                <li>League: {paymentDetails.league}</li>
-                <li>Email: {paymentDetails.email}</li>
-              </ul>
+          {paymentDetails?.success && (
+            <div className="space-y-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 shadow-sm">
+                <h2 className="text-2xl font-bold text-green-800 mb-4 border-b border-green-200 pb-3">
+                  Payment Confirmation
+                </h2>
+                <div className="grid grid-cols-2 gap-4 text-green-700">
+                  <div className="bg-white p-4 rounded-lg shadow-inner">
+                    <p className="text-sm font-medium text-green-600 mb-1">Amount Paid</p>
+                    <p className="text-xl font-bold">${(paymentDetails.amount / 100).toFixed(2)}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-inner">
+                    <p className="text-sm font-medium text-green-600 mb-1">League Type</p>
+                    <p className="text-xl font-bold capitalize">{paymentDetails.league}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-inner col-span-2">
+                    <p className="text-sm font-medium text-green-600 mb-1">Email</p>
+                    <p className="text-lg">{paymentDetails.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                  Additional Information
+                </h3>
+                <p className="text-gray-600">
+                  You will receive a confirmation email shortly with additional details about the league.
+                </p>
+              </div>
             </div>
           )}
 
-          <p className="text-gray-600 mb-6">
-            You will receive a confirmation email shortly with additional details about the league.
-          </p>
-
-          <div className="space-x-4">
+          <div className="mt-6">
             <Link
               to="/"
-              className="inline-block bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors"
+              className="inline-block bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors font-semibold shadow-md"
             >
               Return Home
             </Link>

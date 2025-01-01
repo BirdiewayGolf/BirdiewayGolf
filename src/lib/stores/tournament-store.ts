@@ -54,10 +54,7 @@ export const useTournamentStore = create<TournamentState>()(
             t.id === tournamentId
               ? {
                   ...t,
-                  pairings: [
-                    ...t.pairings,
-                    { ...pairing, id: crypto.randomUUID() },
-                  ],
+                  pairings: [...(t.pairings || []), { ...pairing, id: crypto.randomUUID() }],
                 }
               : t
           ),
@@ -66,7 +63,7 @@ export const useTournamentStore = create<TournamentState>()(
       updatePairing: (tournamentId, pairingId, updates) => {
         set((state) => ({
           tournaments: state.tournaments.map((t) =>
-            t.id === tournamentId
+            t.id === tournamentId && t.pairings
               ? {
                   ...t,
                   pairings: t.pairings.map((p) =>
@@ -80,7 +77,7 @@ export const useTournamentStore = create<TournamentState>()(
       deletePairing: (tournamentId, pairingId) => {
         set((state) => ({
           tournaments: state.tournaments.map((t) =>
-            t.id === tournamentId
+            t.id === tournamentId && t.pairings
               ? {
                   ...t,
                   pairings: t.pairings.filter((p) => p.id !== pairingId),

@@ -1,6 +1,13 @@
 // netlify/functions/contact.ts
-import { Handler } from '@netlify/functions';
+import { Handler, HandlerEvent, HandlerResponse } from '@netlify/functions';
 import nodemailer from 'nodemailer';
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -11,21 +18,28 @@ const transporter = nodemailer.createTransport({
   secure: true,
 });
 
-export const handler: Handler = async (event) => {
+export const handler: Handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ message: 'Method not allowed' }),
+      body: JSON.stringify({ 
+        success: false,
+        message: 'Method not allowed' 
+      })
     };
   }
 
   try {
-    const { name, email, phone, message } = JSON.parse(event.body || '{}');
+    const data = JSON.parse(event.body || '{}') as ContactFormData;
+    const { name, email, phone, message } = data;
 
     if (!name || !email || !phone || !message) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'All fields are required' }),
+        body: JSON.stringify({ 
+          success: false,
+          error: 'All fields are required' 
+        })
       };
     }
 
@@ -44,23 +58,26 @@ export const handler: Handler = async (event) => {
             <p style="white-space: pre-wrap;">${message}</p>
           </div>
         </div>
-      `,
+      `
     };
 
     await transporter.sendMail(mailOptions);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Email sent successfully' }),
+      body: JSON.stringify({ 
+        success: true,
+        message: 'Email sent successfully' 
+      })
     };
   } catch (error) {
     console.error('Error sending email:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
-        message: 'Error sending email', 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      }),
+      body: JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
     };
   }
 };

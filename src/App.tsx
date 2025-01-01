@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -20,7 +19,9 @@ import { JuniorTournaments } from './pages/tournaments/junior';
 import { LongDayTournaments } from './pages/tournaments/longday';
 
 // Registration Pages
-import { LeagueRegistration } from './pages/registration';
+import { BusinessRegistrationForm } from './components/registration/business-registration-form';
+import { JuniorRegistrationForm } from './components/registration/junior-registration-form';
+import { LongDayRegistrationForm } from './components/registration/longday-registration-form';
 import { RegistrationSuccess } from './pages/registration/success';
 import { RegistrationCancel } from './pages/registration/cancel';
 import { RegistrationError } from './pages/registration/error';
@@ -67,7 +68,9 @@ export default function App() {
       <Route path="/tournaments/longday" element={<Layout><LongDayTournaments /></Layout>} />
 
       {/* Registration Routes */}
-      <Route path="/registration" element={<Layout><LeagueRegistration /></Layout>} />
+      <Route path="/register/business" element={<Layout><BusinessRegistrationForm /></Layout>} />
+      <Route path="/register/junior" element={<Layout><JuniorRegistrationForm /></Layout>} />
+      <Route path="/register/longday" element={<Layout><LongDayRegistrationForm /></Layout>} />
       <Route path="/registration/success" element={<Layout><RegistrationSuccess /></Layout>} />
       <Route path="/registration/cancel" element={<Layout><RegistrationCancel /></Layout>} />
       <Route path="/registration/error" element={<Layout><RegistrationError /></Layout>} />
