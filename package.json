@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite --port 5173\" \"node server/index.js\"",
-    "build": "vite build && tsc -p tsconfig.server.json",
+    "build": "npx tsc && npx vite build && tsc -p tsconfig.server.json",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node --loader ts-node/esm server/index.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "start": "node server/index.js"
+     "start": "node server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
