@@ -1,4 +1,3 @@
-// src/lib/services/email.ts
 interface EmailData {
   name: string;
   email: string;
@@ -8,7 +7,11 @@ interface EmailData {
 
 export const sendEmail = async (data: EmailData) => {
   try {
-    const response = await fetch('http://localhost:5174/api/contact', {
+    const baseUrl = import.meta.env.PROD 
+      ? 'https://birdiewaygolf.onrender.com' 
+      : 'http://localhost:5174';
+      
+    const response = await fetch(`${baseUrl}/api/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
