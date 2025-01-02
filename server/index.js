@@ -3,11 +3,12 @@ import cors from 'cors';
 import nodemailer from 'nodemailer';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import Stripe from 'stripe';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -39,13 +40,20 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://birdiewaygolf.onrender.com' 
+    : 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
 
 app.use(express.json());
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, '../dist')));
+}
 
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
@@ -75,11 +83,10 @@ transporter.verify()
     process.exit(1);
   });
 
-// Email formatting function
 const formatRegistrationData = (leagueType, formData) => {
   switch (leagueType) {
     case 'business':
-      return `
+      return 
         <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
           <h3 style="margin-bottom: 10px; color: #0A5C36;">Business League Registration Details</h3>
           <p><strong>Team Name:</strong> ${formData.teamName || 'N/A'}</p>
@@ -88,10 +95,9 @@ const formatRegistrationData = (leagueType, formData) => {
           <p><strong>Email:</strong> ${formData.email || 'N/A'}</p>
           <p><strong>Phone:</strong> ${formData.phone || 'N/A'}</p>
         </div>
-      `;
-    
+      ;
     case 'junior':
-      return `
+      return 
         <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
           <h3 style="margin-bottom: 10px; color: #0A5C36;">Junior League Registration Details</h3>
           <p><strong>Player Name:</strong> ${formData.playerName || 'N/A'}</p>
@@ -101,20 +107,18 @@ const formatRegistrationData = (leagueType, formData) => {
           <p><strong>Parent Email:</strong> ${formData.parentEmail || 'N/A'}</p>
           <p><strong>Parent Phone:</strong> ${formData.parentPhone || 'N/A'}</p>
         </div>
-      `;
-    
+      ;
     case 'longday':
-      const playersHtml = formData.players 
-        ? formData.players.map((player, index) => `
+      const playersHtml = formData.players
+        ? formData.players.map((player, index) => 
             <div style="background-color: #e9e9e9; padding: 10px; border-radius: 6px; margin: 5px 0;">
               <p><strong>Player ${index + 1} Name:</strong> ${player.name || 'N/A'}</p>
               <p><strong>Email:</strong> ${player.email || 'N/A'}</p>
               <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
               <p><strong>Shirt Size:</strong> ${player.shirtSize || 'N/A'}</p>
             </div>
-          `).join('')
+          ).join('')
         : '<p>No players registered</p>';
-
       return `
         <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
           <h3 style="margin-bottom: 10px; color: #0A5C36;">Long Day League Registration Details</h3>
@@ -123,13 +127,12 @@ const formatRegistrationData = (leagueType, formData) => {
           ${playersHtml}
         </div>
       `;
-    
     default:
-      return `
+      return 
         <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; margin: 10px 0;">
           <p>Unrecognized League Type</p>
         </div>
-      `;
+      ;
   }
 };
 
@@ -138,24 +141,15 @@ app.post('/api/contact', async (req, res) => {
     const { name, email, phone, message } = req.body;
 
     if (!name || !email || !phone || !message) {
-      return res.status(400).json({
-        success: false,
-        error: 'All fields are required'
-      });
+      return res.status(400).json({ success: false, error: 'All fields are required' });
     }
 
     if (!validateEmail(email)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid email format'
-      });
+      return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
 
     if (!validatePhone(phone)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid phone number format'
-      });
+      return res.status(400).json({ success: false, error: 'Invalid phone number format' });
     }
 
     const mailOptions = {
@@ -177,11 +171,7 @@ app.post('/api/contact', async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-
-    return res.status(200).json({
-      success: true
-    });
-
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Server error:', error);
     return res.status(500).json({
@@ -199,11 +189,8 @@ app.get('/api/registrations', async (req, res) => {
     });
 
     const registrations = sessions.data
-      // Filter out cancelled sessions
       .filter(session => {
-        // If metadata shows it's cancelled, filter it out
         if (session.metadata?.status === 'cancelled') return false;
-        // If Stripe status is expired/canceled, filter it out
         if (session.status === 'expired' || session.status === 'canceled') return false;
         return true;
       })
@@ -234,11 +221,9 @@ app.delete('/api/registrations/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
     console.log('Attempting to delete session:', sessionId);
-    
-    // First retrieve the session to verify it exists
+
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // We'll use Stripe's metadata to mark the session as cancelled
     try {
       await stripe.checkout.sessions.update(sessionId, {
         metadata: {
@@ -250,13 +235,10 @@ app.delete('/api/registrations/:sessionId', async (req, res) => {
       console.log('Session marked as cancelled:', sessionId);
     } catch (updateError) {
       console.error('Error updating session:', updateError);
-      // Continue even if update fails
     }
-    
-    // Send cancellation email if it was a paid registration
+
     if (session.payment_status === 'paid') {
       const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
-      
       const cancellationEmail = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #0A5C36;">Registration Cancelled</h2>
@@ -282,7 +264,7 @@ app.delete('/api/registrations/:sessionId', async (req, res) => {
       }
     }
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'Registration cancelled successfully',
       sessionId,
@@ -292,12 +274,9 @@ app.delete('/api/registrations/:sessionId', async (req, res) => {
   } catch (error) {
     console.error('Error deleting registration:', error);
     if (error.code === 'resource_missing') {
-      return res.status(404).json({
-        success: false,
-        error: 'Registration not found'
-      });
+      return res.status(404).json({ success: false, error: 'Registration not found' });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete registration'
     });
@@ -330,8 +309,12 @@ app.post('/api/create-checkout', async (req, res) => {
         }
       ],
       mode: 'payment',
-      success_url: `http://localhost:5173/registration/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/registration/cancel`,
+      success_url: process.env.NODE_ENV === 'production'
+        ? `https://birdiewaygolf.onrender.com/registration/success?session_id={CHECKOUT_SESSION_ID}`
+        : `http://localhost:5173/registration/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: process.env.NODE_ENV === 'production'
+        ? `https://birdiewaygolf.onrender.com/registration/cancel`
+        : `http://localhost:5173/registration/cancel`,
       metadata: {
         leagueType,
         registrationData: JSON.stringify(formData)
@@ -358,10 +341,7 @@ app.post('/api/create-checkout', async (req, res) => {
       html: emailContent
     });
 
-    res.json({
-      id: session.id,
-      url: session.url
-    });
+    res.json({ id: session.id, url: session.url });
   } catch (error) {
     console.error('Stripe checkout error:', error);
     res.status(500).json({
@@ -372,81 +352,80 @@ app.post('/api/create-checkout', async (req, res) => {
 
 app.post('/api/verify-payment', async (req, res) => {
   try {
-    // Log the entire request body to see what's being sent
     console.log('Verify Payment Request Body:', req.body);
-
-    // Extract sessionId from query params or body
     const sessionId = req.body.sessionId || req.query.session_id;
- // Check if sessionId is missing
- if (!sessionId) {
-  return res.status(400).json({ 
-    success: false,
-    error: 'Session ID is required' 
-  });
-}
 
-const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!sessionId) {
+      return res.status(400).json({ success: false, error: 'Session ID is required' });
+    }
 
-if (session.payment_status === 'paid') {
-  const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
-  
-  const confirmationEmail = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #0A5C36;">Registration Confirmed</h2>
-      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-        <p>Payment Successful</p>
-        <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
-        <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
-        ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
-      </div>
-    </div>
-  `;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    if (session.payment_status === 'paid') {
+      const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
+      const confirmationEmail = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0A5C36;">Registration Confirmed</h2>
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+            <p>Payment Successful</p>
+            <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
+            <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
+            ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
+          </div>
+        </div>
+      `;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_ADDRESS,
-    to: session.customer_email,
-    cc: process.env.EMAIL_ADDRESS,
-    subject: 'BirdieWay Golf - Registration Confirmed',
-    html: confirmationEmail
-  });
-}
+      await transporter.sendMail({
+        from: process.env.EMAIL_ADDRESS,
+        to: session.customer_email,
+        cc: process.env.EMAIL_ADDRESS,
+        subject: 'BirdieWay Golf - Registration Confirmed',
+        html: confirmationEmail
+      });
+    }
 
-const { status, paymentStatus } = mapStripeStatus(session.payment_status);
-res.json({
-  success: true,
-  status,
-  paymentStatus,
-  amount: session.amount_total,
-  league: session.metadata?.leagueType,
-  email: session.customer_email
-});
-} catch (error) {
-console.error('Payment verification error:', error);
-res.status(500).json({ 
-  success: false,
-  error: error instanceof Error ? error.message : 'Failed to verify payment' 
-});
-}
+    const { status, paymentStatus } = mapStripeStatus(session.payment_status);
+    res.json({
+      success: true,
+      status,
+      paymentStatus,
+      amount: session.amount_total,
+      league: session.metadata?.leagueType,
+      email: session.customer_email
+    });
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to verify payment'
+    });
+  }
 });
 
 app.get('/api/health', (req, res) => {
-res.json({
-status: 'healthy',
-timestamp: new Date().toISOString(),
-environment: process.env.NODE_ENV || 'development'
-});
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, '../dist/index.html'));
+  });
+}
+
 app.listen(port, () => {
-console.log(`Server running on port ${port}`);
-console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 process.on('unhandledRejection', (reason) => {
-console.error('Unhandled Rejection:', reason);
+  console.error('Unhandled Rejection:', reason);
 });
 
 process.on('uncaughtException', (error) => {
-console.error('Uncaught Exception:', error);
-process.exit(1);
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
 });
