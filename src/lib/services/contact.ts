@@ -1,37 +1,50 @@
-import { ContactFormData } from '../types/contact';
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
 
 interface ContactResponse {
   success: boolean;
   error?: string;
-  message?: string;
+  data?: any;
 }
 
-export async function sendContactForm(data: ContactFormData): Promise<ContactResponse> {
+export const sendContactForm = async (data: ContactFormData): Promise<ContactResponse> => {
   try {
-    const response = await fetch('http://localhost:3000/api/contact', {
+    // Get the base URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? `${window.location.origin}`  // This will use the current domain
+      : 'http://localhost:3000';     // Your local server port
+
+    console.log('Sending contact form to:', `${baseUrl}/api/contact`);
+
+    const response = await fetch(`${baseUrl}/api/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
-      // Remove the abort controller as it's causing issues
+      body: JSON.stringify(data)
     });
 
+    console.log('Response status:', response.status);
+
+    const responseData = await response.json();
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      console.error('Contact form error:', responseData);
+      throw new Error(responseData.error || 'Failed to send message');
     }
 
-    const result = await response.json();
     return {
       success: true,
-      message: result.message || 'Message sent successfully'
+      data: responseData
     };
   } catch (error) {
-    console.error('Contact form submission failed:', error);
+    console.error('Contact form submission error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send message'
     };
   }
-}
+};
