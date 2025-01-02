@@ -60,7 +60,7 @@ app.use(cors({
 app.use(express.json());
 
 // Serve static files from the dist directory
-app.use(express.static(join(__dirname, '..')));
+app.use(express.static(join(__dirname, '..', 'dist')));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -325,8 +325,8 @@ app.post('/api/create-checkout', async (req, res) => {
 
     // Update success and cancel URLs for production
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://biewaygolf.onrender.com'
-      : 'http://localhost:5173';
+  ? 'https://birdiewaygolf.onrender.com'
+  : 'http://localhost:5173';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -451,10 +451,10 @@ app.post('/api/create-checkout', async (req, res) => {
     
     // Handle SPA routing - must be after all API routes
     app.get('*', (req, res) => {
-      res.sendFile(join(__dirname, '..', 'index.html'));
+      res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
     });
     
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       console.log(`Server running on port ${port}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
