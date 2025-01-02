@@ -4,6 +4,7 @@ import { TournamentList } from '@/components/tournaments/tournament-list';
 import { sortTournamentsByDate } from '@/lib/utils/tournament';
 import { Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import swingImage from '@/assets/swing.jpg';
 
 export function BusinessTournaments() {
   const getTournamentsByType = useTournamentStore((state) => state.getTournamentsByType);
@@ -15,7 +16,7 @@ export function BusinessTournaments() {
       {/* Hero Section */}
       <div 
         className="relative h-[500px] bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/swing.jpg')" }}
+        style={{ backgroundImage: `url(${swingImage})` }}  // Update this line
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
         <div className="absolute inset-0 flex items-center">

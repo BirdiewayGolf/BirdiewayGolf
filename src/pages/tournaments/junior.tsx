@@ -4,6 +4,7 @@ import { TournamentList } from '@/components/tournaments/tournament-list';
 import { sortTournamentsByDate } from '@/lib/utils/tournament';
 import { CircleDot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import fundraiserImage from '@/assets/fundraiser.jpg';  // Add this import
 
 export function JuniorTournaments() {
   const getTournamentsByType = useTournamentStore((state) => state.getTournamentsByType);
@@ -15,7 +16,7 @@ export function JuniorTournaments() {
       {/* Hero Section */}
       <div 
         className="relative h-[500px] bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/fundraiser.jpg')" }}
+        style={{ backgroundImage: `url(${fundraiserImage})` }}  // Update this line
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
         <div className="absolute inset-0 flex items-center">

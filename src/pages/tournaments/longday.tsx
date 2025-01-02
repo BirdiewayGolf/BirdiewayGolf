@@ -5,7 +5,7 @@ import { TournamentList } from '@/components/tournaments/tournament-list';
 import { sortTournamentsByDate } from '@/lib/utils/tournament';
 import { Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+import golfImage from '@/assets/golf.jpg';  // Add this import
 export function LongDayTournaments() {
   const getTournamentsByType = useTournamentStore((state) => state.getTournamentsByType);
   const tournaments = getTournamentsByType('longday');
@@ -17,7 +17,7 @@ export function LongDayTournaments() {
       {/* Hero Section */}
       <div 
         className="relative h-[500px] bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/golf.jpg')" }}
+        style={{ backgroundImage: `url(${golfImage})` }}  // Update this line
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
         <div className="absolute inset-0 flex items-center">
