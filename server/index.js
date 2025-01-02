@@ -41,8 +41,7 @@ const port = process.env.PORT || 3000;
 // Updated CORS configuration for production
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://biewaygolf.onrender.com',
-  process.env.VITE_API_URL
+  'https://birdiewaygolf.onrender.com'
 ].filter(Boolean);
 
 app.use(cors({
