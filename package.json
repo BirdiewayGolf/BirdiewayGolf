@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite --port 5173\" \"node server/index.js\"",
-    "build": "npm install && vite build && tsc -p tsconfig.server.json",
+   "build": "vite build && tsc -p tsconfig.server.json",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server/index.js",
