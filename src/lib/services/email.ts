@@ -5,31 +5,40 @@ interface ContactFormData {
   message: string;
 }
 
-export const sendContactForm = async (data: ContactFormData) => {
+interface ContactResponse {
+  success: boolean;
+  error?: string;
+  data?: any;
+}
+
+export const sendContactForm = async (data: ContactFormData): Promise<ContactResponse> => {
   try {
-    const baseUrl = import.meta.env.PROD 
-      ? 'https://birdiewaygolf.onrender.com/api/contact' 
-      : 'http://localhost:5174/api/contact';
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://www.birdiewaygolf.com'
+      : 'http://localhost:5174';
       
-    const response = await fetch(baseUrl, {
+    const response = await fetch(`${baseUrl}/api/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
+      credentials: 'include'
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send message');
+      console.error('Contact form error:', responseData);
+      throw new Error(responseData.error || 'Failed to send message');
     }
 
     return {
       success: true,
-      data: await response.json()
+      data: responseData
     };
   } catch (error) {
-    console.error('Contact form error:', error);
+    console.error('Contact form submission error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send message'

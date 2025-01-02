@@ -41,7 +41,9 @@ const port = process.env.PORT || 3000;
 // Updated CORS configuration for production
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://birdiewaygolf.onrender.com'
+  'https://birdiewaygolf.onrender.com',
+  'https://www.birdiewaygolf.com',
+  'https://birdiewaygolf.com'
 ].filter(Boolean);
 
 app.use(cors({
@@ -56,6 +58,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 app.use(express.json());
 
