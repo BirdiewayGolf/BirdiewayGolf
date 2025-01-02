@@ -1,31 +1,38 @@
-interface EmailData {
+interface ContactFormData {
   name: string;
   email: string;
   phone: string;
   message: string;
 }
 
-export const sendEmail = async (data: EmailData) => {
+export const sendContactForm = async (data: ContactFormData) => {
   try {
     const baseUrl = import.meta.env.PROD 
-      ? 'https://birdiewaygolf.onrender.com' 
-      : 'http://localhost:5174';
+      ? 'https://birdiewaygolf.onrender.com/api/contact' 
+      : 'http://localhost:5174/api/contact';
       
-    const response = await fetch(`${baseUrl}/api/contact`, {
+    const response = await fetch(baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    
+
     if (!response.ok) {
-      throw new Error('Failed to send email');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send message');
     }
-    
-    return response.json();
+
+    return {
+      success: true,
+      data: await response.json()
+    };
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
+    console.error('Contact form error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send message'
+    };
   }
 };
