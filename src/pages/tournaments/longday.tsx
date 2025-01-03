@@ -38,7 +38,7 @@ export function LongDayTournaments() {
                 className="inline-flex items-center px-8 py-3 border-2 border-[#C5A572] text-white 
                          font-semibold rounded-lg hover:bg-[#C5A572] transition-colors"
               >
-                Register Your Team - ${price}
+                Register Your Team - $ 1,500
               </Link>
             </div>
           </div>

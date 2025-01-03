@@ -7,10 +7,12 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {children}
+      <main className="max-w-7xl mx-auto py-4 px-4 md:py-6 md:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+          {children}
+        </div>
       </main>
     </div>
   );
