@@ -8,7 +8,12 @@ interface LeaderboardTableProps {
   onDelete: (id: string) => void;
 }
 
-export function LeaderboardTable({ entries, onEdit, onDelete }: LeaderboardTableProps) {
+export function LeaderboardTable({ 
+  entries, 
+  onEdit, 
+  onDelete 
+}: LeaderboardTableProps) {
+  // Sort entries by score (low to high)
   const sortedEntries = [...entries].sort((a, b) => a.score - b.score);
 
   return (
@@ -20,13 +25,13 @@ export function LeaderboardTable({ entries, onEdit, onDelete }: LeaderboardTable
               Position
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Team/Player
+              Player/Team Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               Score
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              To Par
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Relative to Par
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
@@ -39,24 +44,20 @@ export function LeaderboardTable({ entries, onEdit, onDelete }: LeaderboardTable
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {index + 1}
               </td>
-              <td className="px-6 py-4">
-                <div className="text-sm font-medium text-gray-900">{entry.teamName}</div>
-                <div className="text-sm text-gray-500">
-                  {entry.playerNames.filter(Boolean).join(', ')}
-                </div>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{entry.playerName}</div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {entry.score}
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                <div className="text-sm text-gray-900">{entry.score}</div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`font-medium ${
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                <div className={`text-sm font-medium ${
                   entry.relativeToPar === 0 ? 'text-gray-900' :
-                  entry.relativeToPar > 0 ? 'text-red-600' : 'text-green-600'
+                  entry.relativeToPar! > 0 ? 'text-red-600' : 'text-green-600'
                 }`}>
                   {entry.relativeToPar === 0 ? 'E' : 
-                   entry.relativeToPar > 0 ? `+${entry.relativeToPar}` : 
-                   entry.relativeToPar}
-                </span>
+                   entry.relativeToPar! > 0 ? `+${entry.relativeToPar}` : entry.relativeToPar}
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end space-x-3">
@@ -78,6 +79,11 @@ export function LeaderboardTable({ entries, onEdit, onDelete }: LeaderboardTable
           ))}
         </tbody>
       </table>
+      {entries.length === 0 && (
+        <div className="text-center py-4 text-gray-500">
+          No leaderboard entries yet
+        </div>
+      )}
     </div>
   );
 }

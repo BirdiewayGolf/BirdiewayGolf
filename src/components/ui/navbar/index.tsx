@@ -1,4 +1,3 @@
-// src/components/ui/navbar/index.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
@@ -23,7 +22,6 @@ const navItems = [
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
   { label: 'Sponsors', href: '/sponsors' },
-  
 ];
 
 export function Navbar() {
@@ -74,7 +72,7 @@ export function Navbar() {
               item.dropdownItems ? (
                 <div
                   key={item.label}
-                  className="relative group"
+                  className="relative group isolate"
                   onMouseEnter={() => setActiveDropdown(item.label)}
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
@@ -84,14 +82,15 @@ export function Navbar() {
                   </button>
                   <div className={cn(
                     'absolute top-full left-0 w-48 bg-white shadow-lg rounded-md py-2 transition-all duration-200',
-                    'transform origin-top',
-                    activeDropdown === item.label ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
+                    'transform origin-top z-50',
+                    'border border-gray-200',
+                    activeDropdown === item.label ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
                   )}>
                     {item.dropdownItems.map((dropdownItem) => (
                       <Link
                         key={dropdownItem.href}
                         to={dropdownItem.href}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#0A5C36]/10 hover:text-[#0A5C36] transition-colors"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#0A5C36]/10 hover:text-[#0A5C36] transition-colors bg-white"
                       >
                         {dropdownItem.label}
                       </Link>
@@ -144,17 +143,18 @@ export function Navbar() {
         {/* Menu panel */}
         <div className={cn(
           'absolute right-0 top-0 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out',
+          'flex flex-col',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}>
-          <div className="flex flex-col py-6">
-            <div className="px-4 space-y-1">
+          <div className="flex flex-col py-6 bg-white flex-1">
+            <div className="px-4 space-y-1 bg-white">
               {navItems.map((item) => (
-                <div key={item.label}>
+                <div key={item.label} className="bg-white">
                   {item.dropdownItems ? (
                     <>
                       <button
                         onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-gray-700 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300"
+                        className="w-full flex items-center justify-between px-3 py-2 text-gray-700 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300 bg-white"
                       >
                         <span>{item.label}</span>
                         <ChevronDown className={cn(
@@ -164,13 +164,14 @@ export function Navbar() {
                       </button>
                       <div className={cn(
                         'pl-4 space-y-1 overflow-hidden transition-all duration-300',
+                        'bg-white rounded-md',
                         activeDropdown === item.label ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
                       )}>
                         {item.dropdownItems.map((dropdownItem) => (
                           <Link
                             key={dropdownItem.href}
                             to={dropdownItem.href}
-                            className="block px-3 py-2 text-gray-600 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300"
+                            className="block px-3 py-2 text-gray-700 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300 bg-white"
                           >
                             {dropdownItem.label}
                           </Link>
@@ -180,7 +181,7 @@ export function Navbar() {
                   ) : (
                     <Link
                       to={item.href || '#'}
-                      className="block px-3 py-2 text-gray-700 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300"
+                      className="block px-3 py-2 text-gray-700 hover:text-[#0A5C36] hover:bg-[#0A5C36]/10 rounded-md transition-all duration-300 bg-white"
                     >
                       {item.label}
                     </Link>

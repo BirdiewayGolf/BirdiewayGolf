@@ -1,6 +1,7 @@
 import { getStripe } from '../services/stripe';
-import { STRIPE_CONFIG, PRICES } from '../config/stripe';
+import { STRIPE_CONFIG } from '../config/stripe';
 import type { LeagueType } from '../types/league-pricing';
+import { useLeaguePricingStore } from '../stores/league-pricing-store';
 
 interface CreateCheckoutOptions {
   leagueType: LeagueType;
@@ -18,7 +19,15 @@ export function useStripe() {
       throw new Error('Failed to initialize Stripe');
     }
 
-    const price = PRICES[leagueType];
+    // Get price from league pricing store instead of static PRICES
+    const prices = useLeaguePricingStore.getState().prices;
+    const price = prices[leagueType];
+
+    if (!price) {
+      throw new Error(`No price configured for league type: ${leagueType}`);
+    }
+
+    // Return stripe instance and price
     return { stripe, price };
   };
 

@@ -7,6 +7,15 @@ import { FormButton } from '../ui/form-button';
 import { FormError } from '../ui/form-error';
 import { useLeaguePricingStore } from '@/lib/stores/league-pricing-store';
 
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(price / 100);
+};
+
 const businessSchema = z.object({
   teamName: z.string().min(2, 'Team name is required'),
   companyName: z.string().min(2, 'Company name is required'),
@@ -110,7 +119,7 @@ export function BusinessRegistrationForm() {
                   className="w-full bg-[#0A5C36] hover:bg-[#0A5C36]/90 text-white text-lg font-semibold py-4 px-8 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {isPaymentEnabled 
-                    ? `Proceed to Payment - $${price}`
+                    ? `Proceed to Payment - ${formatPrice(price)}`
                     : 'Registration Currently Unavailable'}
                 </FormButton>
 

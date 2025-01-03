@@ -56,10 +56,82 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature']
 }));
 
+// Stripe webhook endpoint - MUST be before express.json() middleware
+app.post('/api/verify-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
 
+  try {
+    const event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    // Handle webhook events
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
+        
+        if (session.customer_email) {
+          const confirmationEmail = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #0A5C36;">Registration Confirmed</h2>
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+                <p>Payment Successful</p>
+                <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
+                <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
+                ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
+              </div>
+            </div>
+          `;
+
+          await transporter.sendMail({
+            from: process.env.EMAIL_ADDRESS,
+            to: session.customer_email,
+            cc: process.env.EMAIL_ADDRESS,
+            subject: 'BirdieWay Golf - Registration Confirmed',
+            html: confirmationEmail
+          });
+        }
+        break;
+      }
+
+      case 'checkout.session.async_payment_succeeded':
+        console.log('Async payment succeeded:', event.data.object.id);
+        break;
+
+      case 'checkout.session.async_payment_failed':
+        console.log('Async payment failed:', event.data.object.id);
+        break;
+
+      case 'checkout.session.expired':
+        console.log('Checkout expired:', event.data.object.id);
+        break;
+
+      case 'payment_intent.succeeded':
+        console.log('Payment succeeded:', event.data.object.id);
+        break;
+
+      case 'payment_intent.payment_failed':
+        console.log('Payment failed:', event.data.object.id);
+        break;
+
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    res.json({received: true});
+  } catch (err) {
+    console.error('Webhook error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+});
+
+// Regular request parsing middleware - MUST be after webhook endpoint
 app.use(express.json());
 
 // Serve static files from the dist directory
@@ -326,10 +398,9 @@ app.post('/api/create-checkout', async (req, res) => {
       });
     }
 
-    // Update success and cancel URLs for production
     const baseUrl = process.env.NODE_ENV === 'production' 
-  ? 'https://birdiewaygolf.onrender.com'
-  : 'http://localhost:5173';
+      ? 'https://birdiewaygolf.onrender.com'
+      : 'http://localhost:5173';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -353,7 +424,7 @@ app.post('/api/create-checkout', async (req, res) => {
         leagueType,
         registrationData: JSON.stringify(formData)
       },
-      customer_email: formData.email || formData.parentEmail || formData.player1?.email
+      customer_email: formData.email || formData.parentEmail || formData.players?.[0]?.email
     });
 
     const emailContent = `
@@ -368,106 +439,104 @@ app.post('/api/create-checkout', async (req, res) => {
       </div>
     `;
 
+    await transporter.sendMail({
+      from: process.env.EMAIL_ADDRESS,
+      to: process.env.EMAIL_ADDRESS,
+      subject: `New ${leagueType} League Registration`,
+      html: emailContent
+    });
+
+    res.json({
+      id: session.id,
+      url: session.url
+    });
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to create checkout session'
+    });
+  }
+});
+
+app.post('/api/verify-payment', async (req, res) => {
+  try {
+    console.log('Verify Payment Request Body:', req.body);
+    const sessionId = req.body.sessionId || req.query.session_id;
+
+    if (!sessionId) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Session ID is required' 
+      });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid') {
+      const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
+      
+      const confirmationEmail = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0A5C36;">Registration Confirmed</h2>
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+            <p>Payment Successful</p>
+            <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
+            <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
+            ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
+          </div>
+        </div>
+      `;
 
       await transporter.sendMail({
         from: process.env.EMAIL_ADDRESS,
-        to: process.env.EMAIL_ADDRESS,
-        subject: `New ${leagueType} League Registration`,
-        html: emailContent
-      });
-    
-      res.json({
-        id: session.id,
-        url: session.url
-      });
-    } catch (error) {
-      console.error('Stripe checkout error:', error);
-      res.status(500).json({
-        error: error instanceof Error ? error.message : 'Failed to create checkout session'
+        to: session.customer_email,
+        cc: process.env.EMAIL_ADDRESS,
+        subject: 'BirdieWay Golf - Registration Confirmed',
+        html: confirmationEmail
       });
     }
+
+    const { status, paymentStatus } = mapStripeStatus(session.payment_status);
+    res.json({
+      success: true,
+      status,
+      paymentStatus,
+      amount: session.amount_total,
+      league: session.metadata?.leagueType,
+      email: session.customer_email
     });
-    
-    app.post('/api/verify-payment', async (req, res) => {
-      try {
-        console.log('Verify Payment Request Body:', req.body);
-        const sessionId = req.body.sessionId || req.query.session_id;
-    
-        if (!sessionId) {
-          return res.status(400).json({ 
-            success: false,
-            error: 'Session ID is required' 
-          });
-        }
-    
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-    
-        if (session.payment_status === 'paid') {
-          const registrationData = JSON.parse(session.metadata?.registrationData || '{}');
-          
-          const confirmationEmail = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #0A5C36;">Registration Confirmed</h2>
-              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-                <p>Payment Successful</p>
-                <p><strong>Amount:</strong> $${(session.amount_total || 0) / 100}</p>
-                <p><strong>League:</strong> ${session.metadata?.leagueType}</p>
-                ${formatRegistrationData(session.metadata?.leagueType, registrationData)}
-              </div>
-            </div>
-          `;
-    
-          await transporter.sendMail({
-            from: process.env.EMAIL_ADDRESS,
-            to: session.customer_email,
-            cc: process.env.EMAIL_ADDRESS,
-            subject: 'BirdieWay Golf - Registration Confirmed',
-            html: confirmationEmail
-          });
-        }
-    
-        const { status, paymentStatus } = mapStripeStatus(session.payment_status);
-        res.json({
-          success: true,
-          status,
-          paymentStatus,
-          amount: session.amount_total,
-          league: session.metadata?.leagueType,
-          email: session.customer_email
-        });
-      } catch (error) {
-        console.error('Payment verification error:', error);
-        res.status(500).json({ 
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to verify payment' 
-        });
-      }
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to verify payment' 
     });
-    
-    app.get('/api/health', (req, res) => {
-      res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-      });
-    });
-    
-    // Handle SPA routing - must be after all API routes
-    app.get('*', (req, res) => {
-      res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
-    });
-    
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`Server running on port ${port}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
-    
-    process.on('unhandledRejection', (reason) => {
-      console.error('Unhandled Rejection:', reason);
-    });
-    
-    process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
-      process.exit(1);
-    });
-    
+  }
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Handle SPA routing - must be last
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});

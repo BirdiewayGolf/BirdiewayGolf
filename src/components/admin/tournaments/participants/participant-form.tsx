@@ -4,17 +4,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { FormError } from '@/components/ui/form-error';
 import { FormButton } from '@/components/ui/form-button';
-import type { Participant } from '@/lib/types/participant';
+import type { Participant } from '@/lib/types/tournament';
 
 const participantSchema = z.object({
   name: z.string().min(2, 'Name is required'),
+  email: z.string().email('Invalid email format').optional(),
+  phone: z.string().optional(),
 });
 
 type ParticipantFormData = z.infer<typeof participantSchema>;
 
 interface ParticipantFormProps {
-  initialData?: Partial<Participant>;
-  onSubmit: (data: ParticipantFormData) => void;
+  initialData?: Participant | null;
+  onSubmit: (data: { 
+    name: string; 
+    email?: string; 
+    phone?: string 
+  }) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
 }
@@ -31,7 +37,11 @@ export function ParticipantForm({
     formState: { errors },
   } = useForm<ParticipantFormData>({
     resolver: zodResolver(participantSchema),
-    defaultValues: initialData,
+    defaultValues: {
+      name: initialData?.name || '',
+      email: initialData?.email || '',
+      phone: initialData?.phone || '',
+    },
   });
 
   return (
@@ -45,7 +55,24 @@ export function ParticipantForm({
         />
         <FormError message={errors.name?.message} />
       </div>
-
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+        <input
+          type="email"
+          {...register('email')}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+        />
+        <FormError message={errors.email?.message} />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Phone (Optional)</label>
+        <input
+          type="tel"
+          {...register('phone')}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+        />
+        <FormError message={errors.phone?.message} />
+      </div>
       <div className="flex space-x-4">
         <FormButton
           type="submit"
@@ -55,7 +82,6 @@ export function ParticipantForm({
         >
           {initialData ? 'Update Participant' : 'Add Participant'}
         </FormButton>
-
         {onCancel && (
           <button
             type="button"

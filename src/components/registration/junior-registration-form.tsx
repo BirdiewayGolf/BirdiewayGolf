@@ -7,6 +7,15 @@ import { FormButton } from '@/components/ui/form-button';
 import { FormError } from '@/components/ui/form-error';
 import { useLeaguePricingStore } from '@/lib/stores/league-pricing-store';
 
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(price / 100);
+};
+
 const juniorSchema = z.object({
   playerName: z.string().min(2, 'Player name is required'),
   dateOfBirth: z.string().refine((date) => {
@@ -76,14 +85,18 @@ export function JuniorRegistrationForm() {
                         {...register('shirtSize')}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#C5A572] focus:ring-[#C5A572] transition-colors"
                       >
-                        <option value="">Select a size</option>
-                        <option value="YS">Youth Small</option>
-                        <option value="YM">Youth Medium</option>
+                        <option value="">Select a size</option>                    
+                        <option value="YXS">Youth Extra Small</option> 
+                        <option value="YS">Youth Small</option> 
+                        <option value="YM">Youth Medium</option> 
                         <option value="YL">Youth Large</option>
-                        <option value="AS">Adult Small</option>
-                        <option value="AM">Adult Medium</option>
-                        <option value="AL">Adult Large</option>
-                        <option value="AXL">Adult XL</option>
+                         <option value="YXL">Youth XL</option> 
+                        <option value="XS">Adult X-Small</option> 
+                        <option value="AS">Adult Small</option> 
+                        <option value="AM">Adult Medium</option> 
+                        <option value="AL">Adult Large</option> 
+                        <option value="AXL">Adult XL</option> 
+                        <option value="A2XL">Adult 2XL</option> 
                       </select>
                       <FormError message={errors.shirtSize?.message} />
                     </div>
@@ -140,7 +153,7 @@ export function JuniorRegistrationForm() {
                   className="w-full bg-[#0A5C36] hover:bg-[#0A5C36]/90 text-white text-lg font-semibold py-4 px-8 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {isPaymentEnabled 
-                    ? `Proceed to Payment - $${price}`
+                    ? `Proceed to Payment - ${formatPrice(price)}`
                     : 'Registration Currently Unavailable'}
                 </FormButton>
 

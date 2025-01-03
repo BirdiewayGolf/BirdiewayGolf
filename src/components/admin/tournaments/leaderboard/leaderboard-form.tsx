@@ -7,15 +7,14 @@ import { FormButton } from '@/components/ui/form-button';
 import type { LeaderboardEntry } from '@/lib/types/tournament';
 
 const leaderboardSchema = z.object({
-  teamName: z.string().min(2, 'Team name is required'),
-  playerNames: z.array(z.string()).min(1, 'At least one player is required'),
+  playerName: z.string().min(2, 'Player/Team name is required'),
   score: z.number().min(0, 'Score must be 0 or greater'),
 });
 
 type LeaderboardFormData = z.infer<typeof leaderboardSchema>;
 
 interface LeaderboardFormProps {
-  initialData?: Partial<LeaderboardEntry>;
+  initialData?: LeaderboardEntry | null;
   onSubmit: (data: LeaderboardFormData) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
@@ -37,8 +36,8 @@ export function LeaderboardForm({
   } = useForm<LeaderboardFormData>({
     resolver: zodResolver(leaderboardSchema),
     defaultValues: {
-      ...initialData,
-      playerNames: initialData?.playerNames || [''],
+      playerName: initialData?.playerName || '',
+      score: initialData?.score || 0,
     },
   });
 
@@ -47,34 +46,26 @@ export function LeaderboardForm({
   const relativeToPar = score - coursePar;
   const relativeToParDisplay = relativeToPar === 0 ? 'E' : relativeToPar > 0 ? `+${relativeToPar}` : relativeToPar;
 
+  const handleFormSubmit = (data: LeaderboardFormData) => {
+    // Add the relativeToPar calculation to the submitted data
+    const submitData = {
+      ...data,
+      relativeToPar,
+    };
+    onSubmit(submitData);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Team/Player Name</label>
+        <label className="block text-sm font-medium text-gray-700">Player/Team Name</label>
         <input
           type="text"
-          {...register('teamName')}
+          {...register('playerName')}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
         />
-        <FormError message={errors.teamName?.message} />
+        <FormError message={errors.playerName?.message} />
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Players</label>
-        <div className="space-y-2">
-          {[0, 1, 2, 3].map((index) => (
-            <input
-              key={index}
-              type="text"
-              {...register(`playerNames.${index}`)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-              placeholder={`Player ${index + 1}`}
-            />
-          ))}
-        </div>
-        <FormError message={errors.playerNames?.message} />
-      </div>
-
       <div>
         <label className="block text-sm font-medium text-gray-700">Score</label>
         <input
@@ -96,7 +87,6 @@ export function LeaderboardForm({
           </div>
         )}
       </div>
-
       <div className="flex space-x-4">
         <FormButton
           type="submit"
@@ -106,7 +96,6 @@ export function LeaderboardForm({
         >
           {initialData ? 'Update Score' : 'Add Score'}
         </FormButton>
-
         {onCancel && (
           <button
             type="button"

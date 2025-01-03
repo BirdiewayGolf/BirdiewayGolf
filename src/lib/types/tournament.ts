@@ -8,15 +8,21 @@ export interface Tournament {
   coursePar: number;
   type: TournamentType;
   leaderboard?: LeaderboardEntry[];
-  pairings?: TournamentPairing[];
+  pairings: TournamentPairing[];
   participants?: Participant[];
+  
+  // New properties for visibility and tracking
+  isVisible?: boolean;
+  createdAt?: string;
 }
 
 export interface LeaderboardEntry {
+  id: string;
   playerId: string;
   playerName: string;
   score: number;
   position?: number;
+  relativeToPar?: number;
 }
 
 export interface TournamentPairing {
@@ -30,6 +36,9 @@ export interface Participant {
   name: string;
   email: string;
   phone: string;
+  tournamentId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type TournamentType = 'business' | 'junior' | 'longday';

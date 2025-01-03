@@ -10,7 +10,12 @@ import { PairingsTable } from '@/components/admin/tournaments/pairings/pairings-
 import { ParticipantForm } from '@/components/admin/tournaments/participants/participant-form';
 import { ParticipantList } from '@/components/admin/tournaments/participants/participant-list';
 import { useTournamentStore } from '@/lib/stores/tournament-store';
-import type { LeaderboardEntry, TournamentPairing, Participant } from '@/lib/types/tournament';
+import type { 
+  LeaderboardEntry, 
+  TournamentPairing, 
+  Participant, 
+  Tournament 
+} from '@/lib/types/tournament';
 
 type ActiveTab = 'details' | 'leaderboard' | 'pairings' | 'participants';
 
@@ -42,12 +47,13 @@ export function TournamentDetails() {
     );
   }
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Partial<Tournament>) => {
     try {
       setIsSubmitting(true);
       updateTournament(tournament.id, {
         ...tournament,
         ...data,
+        isVisible: data.isVisible ?? tournament.isVisible ?? true,
       });
       navigate('/admin/tournaments');
     } catch (error) {
@@ -57,22 +63,34 @@ export function TournamentDetails() {
     }
   };
 
-  const handleLeaderboardSubmit = async (data: any) => {
+  const handleLeaderboardSubmit = async (data: { 
+    playerName: string; 
+    score: number; 
+  }) => {
     try {
       setIsSubmitting(true);
       const relativeToPar = data.score - tournament.coursePar;
       
       if (editingLeaderboardEntry) {
-        const updatedLeaderboard = tournament.leaderboard?.map(entry =>
+        const updatedLeaderboard = (tournament.leaderboard || []).map(entry =>
           entry.id === editingLeaderboardEntry.id
-            ? { ...entry, ...data, relativeToPar }
+            ? { 
+                ...entry, 
+                playerName: data.playerName, 
+                score: data.score,
+                relativeToPar,
+                // Preserve existing playerId
+                playerId: entry.playerId || crypto.randomUUID()
+              }
             : entry
-        ) || [];
+        );
         updateTournament(tournament.id, { leaderboard: updatedLeaderboard });
       } else {
-        const newEntry = {
+        const newEntry: LeaderboardEntry = {
           id: crypto.randomUUID(),
-          ...data,
+          playerId: crypto.randomUUID(),
+          playerName: data.playerName,
+          score: data.score,
           relativeToPar,
         };
         updateTournament(tournament.id, {
@@ -85,18 +103,29 @@ export function TournamentDetails() {
     }
   };
 
-  const handlePairingSubmit = async (data: any) => {
+  const handlePairingSubmit = async (data: { 
+    time: string; 
+    players: string[] 
+  }) => {
     try {
       setIsSubmitting(true);
+      
       if (editingPairing) {
         const updatedPairings = tournament.pairings.map(pairing =>
-          pairing.id === editingPairing.id ? { ...pairing, ...data } : pairing
+          pairing.id === editingPairing.id 
+            ? { 
+                ...pairing, 
+                time: data.time,
+                players: data.players
+              } 
+            : pairing
         );
         updateTournament(tournament.id, { pairings: updatedPairings });
       } else {
-        const newPairing = {
+        const newPairing: TournamentPairing = {
           id: crypto.randomUUID(),
-          ...data,
+          time: data.time,
+          players: data.players,
         };
         updateTournament(tournament.id, {
           pairings: [...tournament.pairings, newPairing],
@@ -108,18 +137,35 @@ export function TournamentDetails() {
     }
   };
 
-  const handleParticipantSubmit = async (data: any) => {
+  const handleParticipantSubmit = (data: { 
+    name: string; 
+    email?: string | undefined; 
+    phone?: string | undefined 
+  }) => {
     try {
       setIsSubmitting(true);
+      
       if (editingParticipant) {
-        const updatedParticipants = tournament.participants?.map(participant =>
-          participant.id === editingParticipant.id ? { ...participant, ...data } : participant
-        ) || [];
+        const updatedParticipants = (tournament.participants || []).map(participant =>
+          participant.id === editingParticipant.id 
+            ? { 
+                ...participant, 
+                name: data.name,
+                email: data.email || '',
+                phone: data.phone || '',
+                updatedAt: new Date().toISOString()
+              } 
+              : participant
+        );
         updateTournament(tournament.id, { participants: updatedParticipants });
       } else {
-        const newParticipant = {
+        const newParticipant: Participant = {
           id: crypto.randomUUID(),
-          ...data,
+          name: data.name,
+          email: data.email || '',
+          phone: data.phone || '',
+          tournamentId: tournament.id,
+          createdAt: new Date().toISOString(),
         };
         updateTournament(tournament.id, {
           participants: [...(tournament.participants || []), newParticipant],
@@ -185,9 +231,10 @@ export function TournamentDetails() {
               />
               <LeaderboardTable
                 entries={tournament.leaderboard || []}
-                onEdit={setEditingLeaderboardEntry}
+                onEdit={(entry: LeaderboardEntry) => setEditingLeaderboardEntry(entry)}
                 onDelete={(id) => {
-                  const updatedLeaderboard = tournament.leaderboard?.filter(entry => entry.id !== id) || [];
+                  const updatedLeaderboard = (tournament.leaderboard || [])
+                    .filter(entry => entry.id !== id);
                   updateTournament(tournament.id, { leaderboard: updatedLeaderboard });
                 }}
               />
@@ -204,9 +251,10 @@ export function TournamentDetails() {
               />
               <PairingsTable
                 pairings={tournament.pairings}
-                onEdit={setEditingPairing}
+                onEdit={(pairing: TournamentPairing) => setEditingPairing(pairing)}
                 onDelete={(id) => {
-                  const updatedPairings = tournament.pairings.filter(pairing => pairing.id !== id);
+                  const updatedPairings = tournament.pairings
+                    .filter(pairing => pairing.id !== id);
                   updateTournament(tournament.id, { pairings: updatedPairings });
                 }}
               />
@@ -223,9 +271,10 @@ export function TournamentDetails() {
               />
               <ParticipantList
                 participants={tournament.participants || []}
-                onEdit={setEditingParticipant}
+                onEdit={(participant: Participant) => setEditingParticipant(participant)}
                 onDelete={(id) => {
-                  const updatedParticipants = tournament.participants?.filter(participant => participant.id !== id) || [];
+                  const updatedParticipants = (tournament.participants || [])
+                    .filter(participant => participant.id !== id);
                   updateTournament(tournament.id, { participants: updatedParticipants });
                 }}
               />
